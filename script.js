@@ -409,27 +409,36 @@ function switchState(newState) {
     currentStateStartTime = Date.now();
 }
 
-// Hide all images
+// Hide all images with smooth fade out
 function hideAllImages() {
     Object.values(stateImages).forEach(img => {
         if (img) {
             img.classList.remove('active');
+            // Smooth fade out
+            img.style.transition = 'opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
             img.style.opacity = '0';
             img.style.visibility = 'hidden';
-            img.style.transform = 'scale(0.7)';
+            img.style.transform = 'scale(0.95) translateY(10px)';
         }
     });
 }
 
-// Show a specific image by value
+// Show a specific image by value with smooth fade in
 function showImage(value) {
     const img = stateImages[String(value)];
     if (img) {
-        img.classList.add('active');
-        img.style.opacity = '1';
+        // Reset transition for smooth fade in
+        img.style.transition = 'opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1), transform 0.8s cubic-bezier(0.4, 0, 0.2, 1)';
         img.style.visibility = 'visible';
-        img.style.transform = 'scale(1)';
         img.style.zIndex = '25';
+        img.classList.add('active');
+        
+        // Use requestAnimationFrame for smooth animation
+        requestAnimationFrame(() => {
+            img.style.opacity = '1';
+            img.style.transform = 'scale(1) translateY(0)';
+        });
+        
         currentImageValue = value;
         console.log(`Showing image value: ${value}`);
     }
