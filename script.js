@@ -947,8 +947,22 @@ window.addEventListener('load', () => {
     updateStatsDisplay();
     currentStateStartTime = Date.now();
     
-    // Initialize state images
+    // Initialize state images - ensure they're visible
     updateStateImages(currentState);
+    
+    // Double-check image visibility after a short delay
+    setTimeout(() => {
+        const activeImage = currentState === 'manic' ? positiveImage : 
+                           currentState === 'mixed' ? neutralImage : 
+                           depressiveImage;
+        if (activeImage && activeImage.complete && activeImage.naturalHeight !== 0) {
+            console.log('Active image loaded and visible');
+            activeImage.style.display = 'block';
+            activeImage.classList.remove('hidden');
+        } else if (activeImage) {
+            console.warn('Active image may not be loaded properly');
+        }
+    }, 100);
     
     // Try to play initial audio (will fail silently on mobile until user interaction)
     depressiveAudio.volume = 0.2;
