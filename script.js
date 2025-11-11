@@ -464,6 +464,72 @@ function animate() {
 }
 
 // ========================================
+// SOUND EFFECTS SYSTEM
+// ========================================
+let audioContext = null;
+
+function initAudioContext() {
+    if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (audioContext.state === 'suspended') {
+        audioContext.resume();
+    }
+}
+
+function playClickSound() {
+    if (!audioContext) {
+        initAudioContext();
+    }
+    
+    try {
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        // Create a pleasant click sound
+        oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+        oscillator.frequency.exponentialRampToValueAtTime(200, audioContext.currentTime + 0.1);
+        
+        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+        
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.1);
+    } catch (error) {
+        console.log('Click sound error:', error);
+    }
+}
+
+function playTransitionSound() {
+    if (!audioContext) {
+        initAudioContext();
+    }
+    
+    try {
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        // Create a smooth transition sound
+        oscillator.frequency.setValueAtTime(400, audioContext.currentTime);
+        oscillator.frequency.exponentialRampToValueAtTime(600, audioContext.currentTime + 0.15);
+        
+        gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.15);
+        
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.15);
+    } catch (error) {
+        console.log('Transition sound error:', error);
+    }
+}
+
+// ========================================
 // IMAGE TRANSITION SYSTEM
 // ========================================
 let currentImageValue = 0; // Track current image value (0 = neutral)
@@ -479,19 +545,22 @@ function hideAllImages() {
     });
 }
 
-// Show a specific image by value with fluid animation
+// Show a specific image by value with cool transition effect
 function showImage(value) {
     const img = DOM.stateImages[String(value)];
     if (img) {
-        img.style.transition = 'opacity 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
         img.classList.remove('hidden');
         img.style.opacity = '0';
-        img.style.transform = 'scale(0.95) translateX(20px)';
+        img.style.transform = 'scale(0.8) rotate(-5deg)';
+        img.style.filter = 'blur(10px)';
         
+        // Cool transition: zoom + rotate + blur effect
         requestAnimationFrame(() => {
             img.classList.add('active');
+            img.style.transition = 'opacity 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.6s ease-out';
             img.style.opacity = '1';
-            img.style.transform = 'scale(1) translateX(0)';
+            img.style.transform = 'scale(1) rotate(0deg)';
+            img.style.filter = 'blur(0px)';
             currentImageValue = value;
         });
     }
@@ -541,33 +610,52 @@ function transitionToImage(targetValue) {
                 const nextImg = DOM.stateImages[String(nextValue)];
                 
                 if (prevImg && nextImg) {
-                    // Fluid watery transition - side to side movement
+                    // Cool transition: ripple + zoom + rotation effect
                     const slideDirection = nextValue > prevValue ? 1 : -1;
                     
-                    // Fade out previous with side movement
-                    prevImg.style.transition = 'opacity 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
-                    prevImg.style.opacity = '0';
-                    prevImg.style.transform = `scale(0.95) translateX(${slideDirection * -30}px)`;
+                    // Create ripple effect on container
+                    const container = prevImg.closest('.image-container');
+                    if (container) {
+                        container.style.animation = 'none';
+                        setTimeout(() => {
+                            container.style.animation = 'rippleEffect 0.5s ease-out';
+                        }, 10);
+                    }
                     
-                    // Fade in next from opposite side
+                    // Fade out previous with cool exit animation
+                    prevImg.style.transition = 'opacity 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.4s ease-out';
+                    prevImg.style.opacity = '0';
+                    prevImg.style.transform = `scale(0.7) rotate(${slideDirection * 15}deg) translateX(${slideDirection * -40}px)`;
+                    prevImg.style.filter = 'blur(8px)';
+                    
+                    // Fade in next with cool entrance animation
                     setTimeout(() => {
                         hideAllImages();
                         const nextImgElement = DOM.stateImages[String(nextValue)];
                         if (nextImgElement) {
-                            nextImgElement.style.transition = 'opacity 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
-                            nextImgElement.style.transform = `scale(0.95) translateX(${slideDirection * 30}px)`;
+                            nextImgElement.style.transition = 'opacity 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.5s ease-out';
+                            nextImgElement.style.transform = `scale(0.7) rotate(${slideDirection * -15}deg) translateX(${slideDirection * 40}px)`;
                             nextImgElement.style.opacity = '0';
+                            nextImgElement.style.filter = 'blur(8px)';
                             nextImgElement.classList.remove('hidden');
                             nextImgElement.classList.add('active');
                             
-                            // Animate in
+                            // Animate in with bounce effect
                             requestAnimationFrame(() => {
                                 nextImgElement.style.opacity = '1';
-                                nextImgElement.style.transform = 'scale(1) translateX(0)';
+                                nextImgElement.style.transform = 'scale(1.1) rotate(0deg) translateX(0)';
+                                nextImgElement.style.filter = 'blur(0px)';
+                                
+                                // Bounce back to normal size
+                                setTimeout(() => {
+                                    nextImgElement.style.transition = 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)';
+                                    nextImgElement.style.transform = 'scale(1) rotate(0deg) translateX(0)';
+                                }, 100);
+                                
                                 currentImageValue = nextValue;
                             });
                         }
-                    }, 150); // Faster crossfade
+                    }, 200);
                 } else {
                     hideAllImages();
                     showImage(nextValue);
@@ -596,6 +684,9 @@ function updateStateImages(state) {
         clearTimeout(imageTransitionTimeout);
         imageTransitionTimeout = null;
     }
+    
+    // Play transition sound
+    playTransitionSound();
     
     if (state === 'manic') {
         // Progressive transition from current to 3
@@ -760,15 +851,24 @@ function clearTimeline() {
 // EVENT LISTENERS - STATE BUTTONS
 // ========================================
 if (DOM.manicBtn) {
-    DOM.manicBtn.addEventListener('click', () => switchState('manic'));
+    DOM.manicBtn.addEventListener('click', () => {
+        playClickSound();
+        switchState('manic');
+    });
 }
 
 if (DOM.mixedBtn) {
-    DOM.mixedBtn.addEventListener('click', () => switchState('mixed'));
+    DOM.mixedBtn.addEventListener('click', () => {
+        playClickSound();
+        switchState('mixed');
+    });
 }
 
 if (DOM.depressiveBtn) {
-    DOM.depressiveBtn.addEventListener('click', () => switchState('depressive'));
+    DOM.depressiveBtn.addEventListener('click', () => {
+        playClickSound();
+        switchState('depressive');
+    });
 }
 
 // ========================================
@@ -793,12 +893,14 @@ document.addEventListener('keydown', (e) => {
 // ========================================
 if (DOM.infoBtn && DOM.infoModal) {
     DOM.infoBtn.addEventListener('click', () => {
+        playClickSound();
         DOM.infoModal.classList.add('visible');
     });
 }
 
 if (DOM.closeInfo && DOM.infoModal) {
     DOM.closeInfo.addEventListener('click', () => {
+        playClickSound();
         DOM.infoModal.classList.remove('visible');
     });
     
@@ -816,6 +918,7 @@ if (DOM.closeInfo && DOM.infoModal) {
 // Fullscreen
 if (DOM.fullscreenBtn) {
     DOM.fullscreenBtn.addEventListener('click', () => {
+        playClickSound();
         if (!document.fullscreenElement) {
             document.documentElement.requestFullscreen().catch(err => {
                 console.log('Fullscreen not supported:', err);
@@ -829,6 +932,7 @@ if (DOM.fullscreenBtn) {
 // Audio toggle
 if (DOM.audioBtn) {
     DOM.audioBtn.addEventListener('click', async () => {
+        playClickSound();
         const enabled = await audioManager.toggle();
         console.log(`Audio ${enabled ? 'enabled' : 'disabled'}`);
     });
@@ -837,6 +941,7 @@ if (DOM.audioBtn) {
 // Share
 if (DOM.shareBtn) {
     DOM.shareBtn.addEventListener('click', async () => {
+        playClickSound();
         const totalTime = AppState.stats.manic + AppState.stats.mixed + AppState.stats.depressive;
         const manicPercent = totalTime > 0 ? ((AppState.stats.manic / totalTime) * 100).toFixed(1) : 0;
         const mixedPercent = totalTime > 0 ? ((AppState.stats.mixed / totalTime) * 100).toFixed(1) : 0;
@@ -870,6 +975,7 @@ if (DOM.shareBtn) {
 // Timeline
 if (DOM.timelineBtn && DOM.timelinePanel) {
     DOM.timelineBtn.addEventListener('click', () => {
+        playClickSound();
         const isHidden = DOM.timelinePanel.classList.toggle('hidden');
         if (!isHidden && timelineChart) {
             // Small delay to ensure canvas is rendered
@@ -881,7 +987,10 @@ if (DOM.timelineBtn && DOM.timelinePanel) {
 }
 
 if (DOM.clearTimelineBtn) {
-    DOM.clearTimelineBtn.addEventListener('click', clearTimeline);
+    DOM.clearTimelineBtn.addEventListener('click', () => {
+        playClickSound();
+        clearTimeline();
+    });
 }
 
 // ========================================
@@ -954,6 +1063,9 @@ function initialize() {
     
     // Initialize audio on first user interaction and auto-enable
     const initAudio = async () => {
+        // Initialize audio context for sound effects
+        initAudioContext();
+        
         if (!audioManager.initialized) {
             await audioManager.initialize();
         }
