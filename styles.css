@@ -489,10 +489,6 @@ main {
     height: auto;
     object-fit: contain;
     border-radius: 24px;
-    opacity: 0;
-    transform: scale(0.7) translateY(20px);
-    transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1), 
-                transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
     pointer-events: none;
     filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.5));
     z-index: 10;
@@ -502,17 +498,49 @@ main {
     border: 2px solid rgba(255, 255, 255, 0.2);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3),
                 inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    /* Default hidden state */
+    opacity: 0;
+    transform: scale(0.7) translateY(20px);
+    transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1), 
+                transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    display: block;
 }
 
+/* Visible state - when NOT hidden */
 .state-image:not(.hidden) {
     opacity: 1 !important;
     transform: scale(1) translateY(0) !important;
+    visibility: visible !important;
+    display: block !important;
     animation: imagePopIn 0.8s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* Ensure depressive image is visible on initial load */
+.state-depressive .depressive-image:not(.hidden),
+.state-depressive #depressive-image:not(.hidden),
+#depressive-image:not(.hidden) {
+    opacity: 1 !important;
+    transform: scale(1) translateY(0) !important;
+    visibility: visible !important;
+    display: block !important;
+}
+
+/* Ensure images are visible when not hidden - override default opacity */
+#neutral-image:not(.hidden),
+#positive-image:not(.hidden),
+#depressive-image:not(.hidden) {
+    opacity: 1 !important;
+    transform: scale(1) translateY(0) !important;
+    visibility: visible !important;
+    display: block !important;
+}
+
+/* Hidden state */
 .state-image.hidden {
     opacity: 0 !important;
     transform: scale(0.7) translateY(20px) !important;
+    visibility: hidden !important;
+    display: none !important;
     pointer-events: none;
 }
 

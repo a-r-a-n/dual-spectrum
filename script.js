@@ -346,46 +346,63 @@ function switchState(newState) {
 
 // Update state images based on current state
 function updateStateImages(state) {
+    console.log('Updating state images for:', state);
+    
     // Hide all images first
     if (neutralImage) {
         neutralImage.classList.add('hidden');
         neutralImage.style.display = 'none';
+        neutralImage.style.visibility = 'hidden';
     }
     if (positiveImage) {
         positiveImage.classList.add('hidden');
         positiveImage.style.display = 'none';
+        positiveImage.style.visibility = 'hidden';
     }
     if (depressiveImage) {
         depressiveImage.classList.add('hidden');
         depressiveImage.style.display = 'none';
+        depressiveImage.style.visibility = 'hidden';
     }
     
-    // Show appropriate image based on state
-    if (state === 'manic') {
-        // Show positive image (3)
-        if (positiveImage) {
-            positiveImage.classList.remove('hidden');
-            positiveImage.style.display = 'block';
-            // Force reflow for animation
-            void positiveImage.offsetWidth;
+    // Small delay to ensure hide completes
+    setTimeout(() => {
+        // Show appropriate image based on state
+        if (state === 'manic') {
+            // Show positive image (3)
+            if (positiveImage) {
+                positiveImage.classList.remove('hidden');
+                positiveImage.style.display = 'block';
+                positiveImage.style.visibility = 'visible';
+                positiveImage.style.opacity = '1';
+                console.log('Showing positive image (3.jpg)');
+                // Force reflow for animation
+                void positiveImage.offsetWidth;
+            }
+        } else if (state === 'mixed') {
+            // Show neutral image (0)
+            if (neutralImage) {
+                neutralImage.classList.remove('hidden');
+                neutralImage.style.display = 'block';
+                neutralImage.style.visibility = 'visible';
+                neutralImage.style.opacity = '1';
+                console.log('Showing neutral image (0.jpg)');
+                // Force reflow for animation
+                void neutralImage.offsetWidth;
+            }
+        } else if (state === 'depressive') {
+            // Show depressive image (-3)
+            if (depressiveImage) {
+                depressiveImage.classList.remove('hidden');
+                depressiveImage.style.display = 'block';
+                depressiveImage.style.visibility = 'visible';
+                depressiveImage.style.opacity = '1';
+                console.log('Showing depressive image (-3.png)');
+                // Force reflow for animation
+                void depressiveImage.offsetWidth;
+            }
         }
-    } else if (state === 'mixed') {
-        // Show neutral image (0)
-        if (neutralImage) {
-            neutralImage.classList.remove('hidden');
-            neutralImage.style.display = 'block';
-            // Force reflow for animation
-            void neutralImage.offsetWidth;
-        }
-    } else if (state === 'depressive') {
-        // Show depressive image (-3)
-        if (depressiveImage) {
-            depressiveImage.classList.remove('hidden');
-            depressiveImage.style.display = 'block';
-            // Force reflow for animation
-            void depressiveImage.offsetWidth;
-        }
-    }
+    }, 50);
 }
 
 // Switch to manic state
@@ -933,11 +950,18 @@ if (positiveImage) {
 }
 if (depressiveImage) {
     depressiveImage.addEventListener('error', function() {
-        console.error('Depressive image (-3.png) failed to load');
+        console.error('Depressive image (-3.png) failed to load from:', this.src);
         this.style.display = 'none';
     });
     depressiveImage.addEventListener('load', function() {
-        console.log('Depressive image (-3.png) loaded successfully');
+        console.log('Depressive image (-3.png) loaded successfully, dimensions:', this.naturalWidth, 'x', this.naturalHeight);
+        // Force visibility on load
+        if (!this.classList.contains('hidden')) {
+            this.style.display = 'block';
+            this.style.visibility = 'visible';
+            this.style.opacity = '1';
+            this.style.transform = 'scale(1) translateY(0)';
+        }
     });
 }
 
@@ -950,19 +974,40 @@ window.addEventListener('load', () => {
     // Initialize state images - ensure they're visible
     updateStateImages(currentState);
     
+    // Force show initial image immediately (for depressive state on load)
+    if (currentState === 'depressive' && depressiveImage) {
+        depressiveImage.classList.remove('hidden');
+        depressiveImage.style.display = 'block';
+        depressiveImage.style.visibility = 'visible';
+        depressiveImage.style.opacity = '1';
+        depressiveImage.style.transform = 'scale(1) translateY(0)';
+        console.log('Forcing depressive image to be visible on initial load');
+    }
+    
     // Double-check image visibility after a short delay
     setTimeout(() => {
         const activeImage = currentState === 'manic' ? positiveImage : 
                            currentState === 'mixed' ? neutralImage : 
                            depressiveImage;
-        if (activeImage && activeImage.complete && activeImage.naturalHeight !== 0) {
-            console.log('Active image loaded and visible');
-            activeImage.style.display = 'block';
-            activeImage.classList.remove('hidden');
-        } else if (activeImage) {
-            console.warn('Active image may not be loaded properly');
+        if (activeImage) {
+            if (activeImage.complete && activeImage.naturalHeight !== 0) {
+                console.log('Active image loaded successfully:', activeImage.src);
+                activeImage.style.display = 'block';
+                activeImage.style.visibility = 'visible';
+                activeImage.style.opacity = '1';
+                activeImage.style.transform = 'scale(1) translateY(0)';
+                activeImage.classList.remove('hidden');
+            } else {
+                console.warn('Active image may not be loaded properly:', activeImage.src);
+                // Try to reload
+                const src = activeImage.src;
+                activeImage.src = '';
+                setTimeout(() => {
+                    activeImage.src = src;
+                }, 100);
+            }
         }
-    }, 100);
+    }, 200);
     
     // Try to play initial audio (will fail silently on mobile until user interaction)
     depressiveAudio.volume = 0.2;
