@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#1a1a2e">
+    <title>Dual Spectrum - An Interactive Expression of Bipolar I Disorder</title>
+    <meta name="description" content="An interactive digital artwork representing the contrasting emotional states of Bipolar I Disorder">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="app" class="state-depressive">
+        <!-- Background particles -->
+        <div class="particles"></div>
+        
+        <!-- Main content -->
+        <div class="container">
+            <header>
+                <h1 class="artwork-title">Dual Spectrum</h1>
+                <p class="artwork-author">Destiny A., Christian H., Thomas M., Aran S. (2025)</p>
+                <p class="artwork-institution">Northwest Vista</p>
+                <p class="artwork-medium">Interactive digital artwork (deployed website)</p>
+            </header>
+
+            <main>
+                <div class="state-indicator">
+                    <span class="current-state">Depressive</span>
+                </div>
+
+                <!-- Dynamic thoughts/feelings -->
+                <div class="thoughts-container">
+                    <p class="thought-text" id="thought-text">
+                        Everything feels heavy. Time moves slowly.
+                    </p>
+                </div>
+
+                <div class="state-toggle">
+                    <button id="manic-btn" class="state-btn manic-btn">
+                        <span>Manic</span>
+                    </button>
+                    <button id="mixed-btn" class="state-btn mixed-btn">
+                        <span>Mixed</span>
+                    </button>
+                    <button id="depressive-btn" class="state-btn depressive-btn active">
+                        <span>Depressive</span>
+                    </button>
+                </div>
+
+                <div class="description">
+                    <p class="state-description">
+                        Click between states to experience the shift in perception, tone, and speed.
+                    </p>
+                    <p class="mobile-hint" id="mobile-hint">
+                        💡 Swipe left or right to switch states
+                    </p>
+                </div>
+
+                <!-- Statistics Display -->
+                <div class="statistics-panel">
+                    <div class="stat-item">
+                        <span class="stat-label">Manic:</span>
+                        <span class="stat-value" id="manic-time">0:00</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Mixed:</span>
+                        <span class="stat-value" id="mixed-time">0:00</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Depressive:</span>
+                        <span class="stat-value" id="depressive-time">0:00</span>
+                    </div>
+                </div>
+
+                <!-- Controls -->
+                <div class="controls">
+                    <button id="info-btn" class="control-btn" title="Show Information">
+                        <span>ℹ️</span>
+                    </button>
+                    <button id="fullscreen-btn" class="control-btn" title="Fullscreen">
+                        <span>⛶</span>
+                    </button>
+                    <button id="share-btn" class="control-btn" title="Share">
+                        <span>🔗</span>
+                    </button>
+                    <button id="timeline-btn" class="control-btn" title="Mood Timeline">
+                        <span>📊</span>
+                    </button>
+                    <label class="control-toggle">
+                        <input type="checkbox" id="auto-transition">
+                        <span>Auto</span>
+                    </label>
+                </div>
+
+                <!-- Intensity Controls -->
+                <div class="intensity-controls">
+                    <label class="intensity-label">
+                        <span>Intensity:</span>
+                        <input type="range" id="intensity-slider" min="0.5" max="2" step="0.1" value="1">
+                        <span id="intensity-value">100%</span>
+                    </label>
+                </div>
+
+                <!-- Visual elements that change with state -->
+                <div class="visual-elements">
+                    <!-- Emotional State Images -->
+                    <div class="state-images">
+                        <img id="neutral-image" src="images/0.jpg" alt="Neutral state (0)" class="state-image neutral-image">
+                        <img id="positive-image" src="images/3.jpg" alt="Positive/Manic state (3)" class="state-image positive-image hidden">
+                        <img id="depressive-image" src="images/-3.png" alt="Depressive state (-3)" class="state-image depressive-image hidden">
+                    </div>
+                    <!-- Breathing Visualization -->
+                    <div class="breathing-circle">
+                        <div class="breath-inner"></div>
+                    </div>
+                    <div class="pulse-circle"></div>
+                    <div class="energy-waves">
+                        <div class="wave wave-1"></div>
+                        <div class="wave wave-2"></div>
+                        <div class="wave wave-3"></div>
+                    </div>
+                </div>
+            </main>
+
+            <footer>
+                <p class="citation">
+                    Destiny A., Christian H., Thomas M., & Aran S. (2025). <em>Dual Spectrum</em> [Digital artwork]. Northwest Vista.
+                </p>
+            </footer>
+        </div>
+
+        <!-- Info Panel -->
+        <div id="info-panel" class="info-panel hidden">
+            <div class="info-content">
+                <button id="close-info" class="close-btn">×</button>
+                <h2>About Bipolar I Disorder</h2>
+                <div class="info-section">
+                    <h3>Manic Episodes</h3>
+                    <p>Characterized by elevated mood, increased energy, racing thoughts, and impulsive behavior. Can include feelings of euphoria, grandiosity, and decreased need for sleep.</p>
+                </div>
+                <div class="info-section">
+                    <h3>Depressive Episodes</h3>
+                    <p>Marked by persistent sadness, loss of interest, fatigue, difficulty concentrating, and feelings of worthlessness. Can significantly impact daily functioning.</p>
+                </div>
+                <div class="info-section">
+                    <h3>Mixed Episodes</h3>
+                    <p>Characterized by experiencing symptoms of both mania and depression simultaneously. Can include agitation, racing thoughts, and suicidal ideation alongside high energy levels.</p>
+                </div>
+                <div class="info-section">
+                    <h3>About This Artwork</h3>
+                    <p>This interactive piece visualizes the dramatic shifts between emotional states. The contrasting colors, speeds, and intensities reflect the lived experience of Bipolar I Disorder. Use the controls to explore different states and view your mood timeline.</p>
+                </div>
+                <div class="info-section">
+                    <p class="info-note"><strong>Note:</strong> This is an artistic representation, not a diagnostic tool. If you or someone you know is experiencing symptoms, please consult a healthcare professional.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mouse trail effect -->
+        <div id="mouse-trail"></div>
+
+        <!-- Mood Timeline Panel -->
+        <div id="timeline-panel" class="timeline-panel hidden">
+            <div class="timeline-content">
+                <button id="close-timeline" class="close-btn">×</button>
+                <h2>Mood Timeline</h2>
+                <div class="timeline-container">
+                    <canvas id="timeline-canvas"></canvas>
+                </div>
+                <div class="timeline-legend">
+                    <div class="legend-item">
+                        <span class="legend-color manic-color"></span>
+                        <span>Manic</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-color mixed-color"></span>
+                        <span>Mixed</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-color depressive-color"></span>
+                        <span>Depressive</span>
+                    </div>
+                </div>
+                <button id="clear-timeline" class="clear-btn">Clear Timeline</button>
+            </div>
+        </div>
+
+        <!-- Share Panel -->
+        <div id="share-panel" class="share-panel hidden">
+            <div class="share-content">
+                <button id="close-share" class="close-btn">×</button>
+                <h2>Share This Artwork</h2>
+                <div class="share-options">
+                    <button id="copy-link-btn" class="share-option-btn">Copy Link</button>
+                    <button id="download-image-btn" class="share-option-btn">Download Image</button>
+                    <div class="share-text">
+                        <textarea id="share-textarea" readonly></textarea>
+                        <button id="copy-text-btn" class="share-option-btn">Copy Text</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Audio elements -->
+        <audio id="manic-audio" loop>
+            <source src="audio/manic-ambient.mp3" type="audio/mpeg">
+        </audio>
+        <audio id="depressive-audio" loop>
+            <source src="audio/depressive-ambient.mp3" type="audio/mpeg">
+        </audio>
+        <audio id="mixed-audio" loop>
+            <source src="audio/mixed-ambient.mp3" type="audio/mpeg">
+        </audio>
+        <!-- Sound effects (using Web Audio API for generated sounds) -->
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
+

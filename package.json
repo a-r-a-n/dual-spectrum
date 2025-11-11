@@ -1,0 +1,22 @@
+{
+  "name": "dual-spectrum",
+  "version": "1.0.0",
+  "description": "Dual Spectrum - An Interactive Expression of Bipolar I Disorder",
+  "main": "index.html",
+  "scripts": {
+    "dev": "npx serve .",
+    "build": "echo 'Static site - no build needed'"
+  },
+  "keywords": [
+    "art",
+    "interactive",
+    "digital-artwork",
+    "bipolar-disorder"
+  ],
+  "author": "Destiny A., Christian H., Thomas M., Aran S. - Northwest Vista",
+  "license": "MIT",
+  "devDependencies": {
+    "serve": "^14.2.1"
+  }
+}
+
