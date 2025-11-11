@@ -68,10 +68,16 @@ const DOM = {
     stateText: document.getElementById('state-text'),
     thoughtText: document.getElementById('thought-text'),
     
-    // Images
-    manicImage: document.getElementById('manic-image'),
-    mixedImage: document.getElementById('mixed-image'),
-    depressiveImage: document.getElementById('depressive-image'),
+    // Images - All 7 state images
+    stateImages: {
+        '-3': document.getElementById('image-neg3'),
+        '-2': document.getElementById('image-neg2'),
+        '-1': document.getElementById('image-neg1'),
+        '0': document.getElementById('image-0'),
+        '1': document.getElementById('image-1'),
+        '2': document.getElementById('image-2'),
+        '3': document.getElementById('image-3')
+    },
     
     // Control buttons
     infoBtn: document.getElementById('info-btn'),
@@ -458,6 +464,126 @@ function animate() {
 }
 
 // ========================================
+// IMAGE TRANSITION SYSTEM
+// ========================================
+let currentImageValue = 0; // Track current image value (0 = neutral)
+let imageTransitionTimeout = null;
+
+// Hide all images
+function hideAllImages() {
+    Object.values(DOM.stateImages).forEach(img => {
+        if (img) {
+            img.classList.remove('active');
+            img.classList.add('hidden');
+        }
+    });
+}
+
+// Show a specific image by value
+function showImage(value) {
+    const img = DOM.stateImages[String(value)];
+    if (img) {
+        img.classList.remove('hidden');
+        img.classList.add('active');
+        currentImageValue = value;
+    }
+}
+
+// Progressive image transition - smoothly transitions through images
+function transitionToImage(targetValue) {
+    // Clear any existing transition
+    if (imageTransitionTimeout) {
+        clearTimeout(imageTransitionTimeout);
+        imageTransitionTimeout = null;
+    }
+    
+    const current = currentImageValue;
+    const target = targetValue;
+    
+    // If already at target, just show it
+    if (current === target) {
+        hideAllImages();
+        showImage(target);
+        return;
+    }
+    
+    // Determine direction and steps
+    const direction = target > current ? 1 : -1;
+    const steps = Math.abs(target - current);
+    
+    // Calculate transition duration - longer for more steps
+    const baseDelay = 600; // 600ms between each image for smooth transitions
+    
+    // Start from current position
+    let stepIndex = 0;
+    
+    function nextStep() {
+        if (stepIndex <= steps) {
+            const nextValue = current + (direction * stepIndex);
+            
+            // Smooth crossfade - fade out current, fade in next
+            if (stepIndex === 0) {
+                // First step - just show current
+                hideAllImages();
+                showImage(nextValue);
+            } else {
+                // Subsequent steps - crossfade
+                const prevValue = current + (direction * (stepIndex - 1));
+                const prevImg = DOM.stateImages[String(prevValue)];
+                const nextImg = DOM.stateImages[String(nextValue)];
+                
+                if (prevImg && nextImg) {
+                    // Fade out previous
+                    prevImg.style.transition = 'opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
+                    prevImg.style.opacity = '0';
+                    
+                    // Fade in next
+                    setTimeout(() => {
+                        hideAllImages();
+                        showImage(nextValue);
+                    }, 300); // Halfway through fade out
+                } else {
+                    hideAllImages();
+                    showImage(nextValue);
+                }
+            }
+            
+            if (stepIndex < steps) {
+                // Continue to next step
+                stepIndex++;
+                imageTransitionTimeout = setTimeout(nextStep, baseDelay);
+            } else {
+                // Transition complete
+                imageTransitionTimeout = null;
+            }
+        }
+    }
+    
+    // Start transition immediately
+    nextStep();
+}
+
+// Update state images based on current state with progressive transitions
+function updateStateImages(state) {
+    // Clear any pending transitions first
+    if (imageTransitionTimeout) {
+        clearTimeout(imageTransitionTimeout);
+        imageTransitionTimeout = null;
+    }
+    
+    if (state === 'manic') {
+        // Progressive transition from current to 3
+        transitionToImage(3);
+    } else if (state === 'mixed') {
+        // Transition to neutral (0)
+        transitionToImage(0);
+    } else if (state === 'depressive') {
+        // Progressive transition from current to -3
+        transitionToImage(-3);
+    }
+}
+
+// ========================================
 // STATE TRANSITION MANAGER
 // ========================================
 async function switchState(newState) {
@@ -491,24 +617,8 @@ async function switchState(newState) {
         DOM.stateText.textContent = newState.charAt(0).toUpperCase() + newState.slice(1);
     }
 
-    // Update images with smooth transition
-    [DOM.manicImage, DOM.mixedImage, DOM.depressiveImage].forEach(img => {
-        if (img) {
-            img.classList.remove('active');
-            img.classList.add('hidden');
-        }
-    });
-
-    const activeImage = newState === 'manic' ? DOM.manicImage :
-                       newState === 'mixed' ? DOM.mixedImage :
-                       DOM.depressiveImage;
-    
-    if (activeImage) {
-        setTimeout(() => {
-            activeImage.classList.remove('hidden');
-            activeImage.classList.add('active');
-        }, 100);
-    }
+    // Update images with smooth progressive transition
+    updateStateImages(newState);
 
     // Update thought
     updateThought(newState);
@@ -791,6 +901,21 @@ document.addEventListener('touchend', (e) => {
 // ========================================
 function initialize() {
     console.log('Initializing Dual Spectrum...');
+    
+    // Initialize images - set initial image based on current state
+    if (AppState.current === 'depressive') {
+        currentImageValue = -3;
+        hideAllImages();
+        showImage(-3);
+    } else if (AppState.current === 'manic') {
+        currentImageValue = 3;
+        hideAllImages();
+        showImage(3);
+    } else {
+        currentImageValue = 0;
+        hideAllImages();
+        showImage(0);
+    }
     
     // Start animation loop
     animate();
