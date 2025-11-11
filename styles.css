@@ -469,12 +469,11 @@ main {
 /* State Images */
 .state-images {
     position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+    top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
-    z-index: 20 !important; /* Higher z-index to ensure visibility */
+    z-index: 25 !important;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -483,9 +482,6 @@ main {
 
 .state-image {
     position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
     max-width: 320px;
     max-height: 320px;
     width: auto;
@@ -494,25 +490,26 @@ main {
     border-radius: 24px;
     pointer-events: none;
     filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.5));
-    z-index: 20 !important; /* Higher z-index */
+    z-index: 25 !important;
     background: rgba(255, 255, 255, 0.05);
     backdrop-filter: blur(20px);
     padding: 8px;
     border: 2px solid rgba(255, 255, 255, 0.2);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3),
                 inset 0 1px 0 rgba(255, 255, 255, 0.1);
-    /* Default hidden state */
+    /* Always in layout, just hidden with opacity */
     opacity: 0;
-    transform: translate(-50%, -50%) scale(0.7);
-    transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1), 
-                transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: scale(0.7);
+    transition: opacity 0.6s ease-out, 
+                transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    visibility: hidden;
     display: block;
 }
 
 /* Visible state - when NOT hidden */
 .state-image:not(.hidden) {
     opacity: 1 !important;
-    transform: translate(-50%, -50%) scale(1) !important;
+    transform: scale(1) !important;
     visibility: visible !important;
     display: block !important;
     animation: imagePopIn 0.8s cubic-bezier(0.4, 0, 0.2, 1);
@@ -523,7 +520,7 @@ main {
 .state-depressive #depressive-image:not(.hidden),
 #depressive-image:not(.hidden) {
     opacity: 1 !important;
-    transform: translate(-50%, -50%) scale(1) !important;
+    transform: scale(1) !important;
     visibility: visible !important;
     display: block !important;
 }
@@ -533,32 +530,32 @@ main {
 #positive-image:not(.hidden),
 #depressive-image:not(.hidden) {
     opacity: 1 !important;
-    transform: translate(-50%, -50%) scale(1) !important;
+    transform: scale(1) !important;
     visibility: visible !important;
     display: block !important;
-    z-index: 20 !important;
+    z-index: 25 !important;
 }
 
-/* Hidden state */
+/* Hidden state - keep in layout but invisible */
 .state-image.hidden {
     opacity: 0 !important;
-    transform: translate(-50%, -50%) scale(0.7) !important;
+    transform: scale(0.7) !important;
     visibility: hidden !important;
-    display: none !important;
     pointer-events: none;
+    /* DO NOT use display: none - it removes from layout */
 }
 
 @keyframes imagePopIn {
     0% {
         opacity: 0;
-        transform: translate(-50%, -50%) scale(0.7);
+        transform: scale(0.7);
     }
     60% {
-        transform: translate(-50%, -50%) scale(1.05);
+        transform: scale(1.05);
     }
     100% {
         opacity: 1;
-        transform: translate(-50%, -50%) scale(1);
+        transform: scale(1);
     }
 }
 
@@ -598,33 +595,33 @@ main {
 
 @keyframes imagePulse {
     0%, 100% {
-        transform: scale(1) translateY(0);
+        transform: scale(1);
     }
     50% {
-        transform: scale(1.03) translateY(-3px);
+        transform: scale(1.03);
     }
 }
 
 @keyframes imageShake {
     0%, 100% {
-        transform: translateX(0) scale(1) translateY(0);
+        transform: scale(1);
     }
     25% {
-        transform: translateX(-3px) scale(1.01) translateY(-2px);
+        transform: scale(1.01) translateX(-3px);
     }
     75% {
-        transform: translateX(3px) scale(1.01) translateY(-2px);
+        transform: scale(1.01) translateX(3px);
     }
 }
 
 @keyframes imageFade {
     0%, 100% {
         opacity: 0.95;
-        transform: scale(1) translateY(0);
+        transform: scale(1);
     }
     50% {
         opacity: 0.8;
-        transform: scale(0.99) translateY(2px);
+        transform: scale(0.99);
     }
 }
 
