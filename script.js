@@ -287,7 +287,7 @@ function updateThought() {
     }, 300);
 }
 
-// Switch state function
+// Switch state function with synchronized transitions
 function switchState(newState) {
     if (currentState === newState) return;
     
@@ -297,11 +297,29 @@ function switchState(newState) {
     // Play transition sound
     playTransitionSound();
     
+    // Calculate transition duration based on image steps
+    const currentImage = currentImageValue;
+    let targetImage = 0;
+    if (newState === 'manic') targetImage = 3;
+    else if (newState === 'mixed') targetImage = 0;
+    else targetImage = -3;
+    
+    const imageSteps = Math.abs(targetImage - currentImage);
+    const transitionDuration = Math.max(2000, imageSteps * 600); // At least 2s, or based on steps
+    
+    // Smooth background transition - synchronized with image transition
+    app.style.transition = `background ${transitionDuration}ms cubic-bezier(0.4, 0, 0.2, 1),
+                            color ${transitionDuration}ms cubic-bezier(0.4, 0, 0.2, 1)`;
+    
     // Remove all state classes
     app.classList.remove('state-manic', 'state-mixed', 'state-depressive');
-    app.classList.add(`state-${newState}`);
     
-    // Update buttons
+    // Small delay to ensure smooth transition start
+    requestAnimationFrame(() => {
+        app.classList.add(`state-${newState}`);
+    });
+    
+    // Update buttons with smooth transition
     manicBtn.classList.remove('active');
     mixedBtn.classList.remove('active');
     depressiveBtn.classList.remove('active');
@@ -310,33 +328,72 @@ function switchState(newState) {
     else if (newState === 'mixed') mixedBtn.classList.add('active');
     else depressiveBtn.classList.add('active');
     
-    // Update indicator
-    stateIndicator.textContent = newState.charAt(0).toUpperCase() + newState.slice(1);
+    // Update indicator with fade
+    stateIndicator.style.opacity = '0';
+    setTimeout(() => {
+        stateIndicator.textContent = newState.charAt(0).toUpperCase() + newState.slice(1);
+        stateIndicator.style.opacity = '1';
+    }, 200);
     
-    // Update thought
+    // Update thought with fade
     let thoughts;
     if (newState === 'manic') thoughts = manicThoughts;
     else if (newState === 'mixed') thoughts = mixedThoughts;
     else thoughts = depressiveThoughts;
     
     thoughtIndex = Math.floor(Math.random() * thoughts.length);
-    thoughtText.textContent = thoughts[thoughtIndex];
+    thoughtText.style.opacity = '0';
+    setTimeout(() => {
+        thoughtText.textContent = thoughts[thoughtIndex];
+        thoughtText.style.opacity = '1';
+    }, 300);
     
-    // Update audio
-    manicAudio.pause();
-    mixedAudio.pause();
-    depressiveAudio.pause();
-    manicAudio.currentTime = 0;
-    mixedAudio.currentTime = 0;
-    depressiveAudio.currentTime = 0;
+    // Update audio with crossfade
+    const fadeOutDuration = 500;
+    const fadeInDuration = 500;
     
-    // Play appropriate audio
-    const audio = newState === 'manic' ? manicAudio : newState === 'mixed' ? mixedAudio : depressiveAudio;
-    audio.volume = newState === 'manic' ? 0.3 : newState === 'mixed' ? 0.25 : 0.2;
-    audio.play().catch(() => {});
+    // Fade out current audio
+    const currentAudio = currentState === 'manic' ? manicAudio : 
+                        currentState === 'mixed' ? mixedAudio : depressiveAudio;
+    if (currentAudio && !currentAudio.paused) {
+        const fadeOutInterval = setInterval(() => {
+            if (currentAudio.volume > 0.05) {
+                currentAudio.volume = Math.max(0, currentAudio.volume - 0.05);
+            } else {
+                currentAudio.pause();
+                currentAudio.currentTime = 0;
+                clearInterval(fadeOutInterval);
+            }
+        }, fadeOutDuration / 20);
+    }
     
-    // Recreate particles
-    createParticles();
+    // Fade in new audio
+    setTimeout(() => {
+        manicAudio.pause();
+        mixedAudio.pause();
+        depressiveAudio.pause();
+        manicAudio.currentTime = 0;
+        mixedAudio.currentTime = 0;
+        depressiveAudio.currentTime = 0;
+        
+        const audio = newState === 'manic' ? manicAudio : newState === 'mixed' ? mixedAudio : depressiveAudio;
+        const targetVolume = newState === 'manic' ? 0.3 : newState === 'mixed' ? 0.25 : 0.2;
+        audio.volume = 0;
+        audio.play().catch(() => {});
+        
+        const fadeInInterval = setInterval(() => {
+            if (audio.volume < targetVolume) {
+                audio.volume = Math.min(targetVolume, audio.volume + 0.02);
+            } else {
+                clearInterval(fadeInInterval);
+            }
+        }, fadeInDuration / (targetVolume * 50));
+    }, fadeOutDuration);
+    
+    // Recreate particles with delay
+    setTimeout(() => {
+        createParticles();
+    }, transitionDuration * 0.3);
     
     // Restart thought rotation
     startThoughtRotation();
@@ -344,15 +401,12 @@ function switchState(newState) {
     // Add to timeline
     addTimelinePoint(newState);
     
-    // Update state images
+    // Update state images - this will handle the progressive transition
     updateStateImages(newState);
     
     // Update current state
     currentState = newState;
     currentStateStartTime = Date.now();
-    
-    // Add transition effect
-    app.style.transition = 'all 0.6s ease-in-out';
 }
 
 // Hide all images
@@ -381,7 +435,7 @@ function showImage(value) {
     }
 }
 
-// Progressive image transition - smoothly transitions through images
+// Progressive image transition - smoothly transitions through images with synchronized background
 function transitionToImage(targetValue) {
     // Clear any existing transition
     if (imageTransitionTimeout) {
@@ -403,19 +457,48 @@ function transitionToImage(targetValue) {
     const direction = target > current ? 1 : -1;
     const steps = Math.abs(target - current);
     
+    // Calculate transition duration - longer for more steps
+    const baseDelay = 600; // 600ms between each image for smooth transitions
+    const totalDuration = steps * baseDelay;
+    
     // Start from current position
     let stepIndex = 0;
     
     function nextStep() {
         if (stepIndex <= steps) {
             const nextValue = current + (direction * stepIndex);
-            hideAllImages();
-            showImage(nextValue);
+            
+            // Smooth crossfade - fade out current, fade in next
+            if (stepIndex === 0) {
+                // First step - just show current
+                hideAllImages();
+                showImage(nextValue);
+            } else {
+                // Subsequent steps - crossfade
+                const prevValue = current + (direction * (stepIndex - 1));
+                const prevImg = stateImages[String(prevValue)];
+                const nextImg = stateImages[String(nextValue)];
+                
+                if (prevImg && nextImg) {
+                    // Fade out previous
+                    prevImg.style.transition = 'opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
+                    prevImg.style.opacity = '0';
+                    
+                    // Fade in next
+                    setTimeout(() => {
+                        hideAllImages();
+                        showImage(nextValue);
+                    }, 300); // Halfway through fade out
+                } else {
+                    hideAllImages();
+                    showImage(nextValue);
+                }
+            }
             
             if (stepIndex < steps) {
                 // Continue to next step
                 stepIndex++;
-                imageTransitionTimeout = setTimeout(nextStep, 350); // 350ms between each image
+                imageTransitionTimeout = setTimeout(nextStep, baseDelay);
             } else {
                 // Transition complete
                 imageTransitionTimeout = null;

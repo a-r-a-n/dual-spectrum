@@ -56,8 +56,10 @@ body {
     width: 100%;
     height: 100%;
     position: relative;
-    transition: background-color var(--transition-slow) ease-in-out;
+    transition: background 2s cubic-bezier(0.4, 0, 0.2, 1),
+                color 2s cubic-bezier(0.4, 0, 0.2, 1);
     overflow: hidden;
+    will-change: background;
 }
 
 /* State backgrounds */
@@ -133,19 +135,21 @@ body {
     flex-direction: column;
     justify-content: flex-start;
     align-items: center;
-    padding: 1rem 1.5rem;
+    padding: 1.25rem 1.5rem;
     max-width: 1000px;
     margin: 0 auto;
     overflow-y: auto;
     overflow-x: hidden;
+    scroll-behavior: smooth;
 }
 
 /* Header - Compact and clean */
 header {
     width: 100%;
     text-align: center;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.75rem;
     flex-shrink: 0;
+    transition: opacity 0.5s ease;
 }
 
 .artwork-title {
@@ -222,8 +226,9 @@ main {
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.15em;
-    transition: all var(--transition-medium);
-    margin: 0.5rem 0 0.25rem 0;
+    transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    margin: 0.75rem 0 0.5rem 0;
 }
 
 .state-depressive .state-indicator {
@@ -260,12 +265,13 @@ main {
     position: relative;
     width: 360px;
     height: 360px;
-    margin: 0.75rem 0;
+    margin: 1rem 0;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
     order: -1; /* Show first */
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* State Images - All 7 images */
@@ -300,26 +306,38 @@ main {
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3),
                 inset 0 1px 0 rgba(255, 255, 255, 0.1);
     opacity: 0;
-    transform: scale(1);
-    transition: opacity 0.4s ease-out, transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: scale(0.95) translateY(10px);
+    transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1),
+                transform 0.8s cubic-bezier(0.4, 0, 0.2, 1),
+                filter 0.8s cubic-bezier(0.4, 0, 0.2, 1);
     visibility: hidden;
     display: block;
+    will-change: opacity, transform;
 }
 
 .state-image.active {
     opacity: 1 !important;
-    transform: scale(1) !important;
+    transform: scale(1) translateY(0) !important;
     visibility: visible !important;
     z-index: 26 !important;
 }
 
-@keyframes imagePopIn {
-    0% { opacity: 0; transform: scale(0.95); }
-    100% { opacity: 1; transform: scale(1); }
+/* Smooth crossfade animation for image transitions */
+@keyframes imageFadeIn {
+    0% { 
+        opacity: 0; 
+        transform: scale(0.95) translateY(10px);
+        filter: blur(4px);
+    }
+    100% { 
+        opacity: 1; 
+        transform: scale(1) translateY(0);
+        filter: blur(0);
+    }
 }
 
 .state-image.active {
-    animation: imagePopIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: imageFadeIn 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
 /* Breathing circle - Behind images */
@@ -523,7 +541,8 @@ main {
 .thought-text {
     font-size: 1.1rem;
     line-height: 1.6;
-    transition: all var(--transition-medium);
+    transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+                transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
     font-style: italic;
 }
 
@@ -563,17 +582,17 @@ main {
     justify-content: center;
     width: 100%;
     max-width: 500px;
-    margin: 0.5rem 0;
+    margin: 0.75rem 0;
 }
 
 .state-btn {
-    padding: 0.7rem 1.5rem;
-    font-size: 0.85rem;
+    padding: 0.75rem 1.75rem;
+    font-size: 0.875rem;
     font-weight: 600;
     border: 2px solid;
-    border-radius: 8px;
+    border-radius: 10px;
     cursor: pointer;
-    transition: all var(--transition-fast);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     text-transform: uppercase;
     letter-spacing: 0.08em;
     position: relative;
@@ -581,6 +600,7 @@ main {
     background: transparent;
     backdrop-filter: blur(10px);
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    transform: translateY(0);
 }
 
 .state-btn::before {
@@ -613,8 +633,8 @@ main {
 
 .manic-btn:hover {
     background: var(--manic-primary);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 25px rgba(255, 217, 61, 0.4);
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 8px 30px rgba(255, 217, 61, 0.5);
 }
 
 .manic-btn.active {
@@ -629,8 +649,8 @@ main {
 
 .depressive-btn:hover {
     background: rgba(255, 255, 255, 0.12);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(100, 150, 200, 0.3);
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 8px 25px rgba(100, 150, 200, 0.4);
 }
 
 .depressive-btn.active {
@@ -645,8 +665,8 @@ main {
 
 .mixed-btn:hover {
     background: var(--mixed-primary);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 25px rgba(212, 165, 212, 0.4);
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 8px 30px rgba(212, 165, 212, 0.5);
 }
 
 .mixed-btn.active {
