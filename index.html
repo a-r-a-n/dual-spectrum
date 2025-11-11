@@ -132,17 +132,20 @@
 
                 <!-- Controls Section -->
                 <div class="controls-section">
-                    <!-- State Buttons -->
-                    <div class="state-buttons">
-                        <button class="state-btn" id="manic-btn" aria-label="Switch to Manic State">
-                            <span>Manic</span>
-                        </button>
-                        <button class="state-btn" id="mixed-btn" aria-label="Switch to Mixed State">
-                            <span>Mixed</span>
-                        </button>
-                        <button class="state-btn active" id="depressive-btn" aria-label="Switch to Depressive State">
-                            <span>Depressive</span>
-                        </button>
+                    <!-- State Toggles -->
+                    <div class="state-toggles">
+                        <div class="toggle-wrapper">
+                            <label for="manic-toggle" class="toggle-label">Manic</label>
+                            <input type="checkbox" class="state-toggle pristine" id="manic-toggle" name="state-toggle" value="manic" aria-label="Switch to Manic State">
+                        </div>
+                        <div class="toggle-wrapper">
+                            <label for="mixed-toggle" class="toggle-label">Mixed</label>
+                            <input type="checkbox" class="state-toggle pristine" id="mixed-toggle" name="state-toggle" value="mixed" aria-label="Switch to Mixed State">
+                        </div>
+                        <div class="toggle-wrapper">
+                            <label for="depressive-toggle" class="toggle-label">Depressive</label>
+                            <input type="checkbox" class="state-toggle pristine" id="depressive-toggle" name="state-toggle" value="depressive" checked aria-label="Switch to Depressive State">
+                        </div>
                     </div>
 
                     <!-- Statistics Panel -->

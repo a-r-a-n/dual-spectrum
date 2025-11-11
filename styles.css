@@ -636,92 +636,202 @@ main {
 }
 
 /* ========================================
-   STATE BUTTONS
+   STATE TOGGLES
    ======================================== */
-.state-buttons {
+.state-toggles {
     width: 100%;
     max-width: 680px;
     margin: 0 auto;
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 0.85rem;
+    gap: 1.5rem;
+    align-items: center;
 }
 
-.state-btn {
-    position: relative;
-    padding: 0.65rem 1.25rem;
-    font-size: 0.9rem;
+.toggle-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.toggle-label {
+    font-size: 0.85rem;
     font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.08em;
-    background: rgba(255, 255, 255, 0.08);
-    backdrop-filter: blur(10px);
-    border: 2px solid rgba(255, 255, 255, 0.15);
-    border-radius: var(--radius-md);
-    color: inherit;
+    letter-spacing: 0.1em;
+    color: rgba(255, 255, 255, 0.75);
     cursor: pointer;
-    transition: all var(--transition-base);
-    overflow: hidden;
-    box-shadow: var(--shadow-sm);
+    transition: color var(--transition-base);
 }
 
-.state-btn::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(135deg, 
-        rgba(255, 255, 255, 0.1) 0%, 
-        rgba(255, 255, 255, 0.05) 100%
-    );
-    opacity: 0;
-    transition: opacity var(--transition-base);
+.toggle-wrapper:has(input:checked) .toggle-label {
+    color: rgba(255, 255, 255, 0.95);
 }
 
-.state-btn::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 0;
-    height: 0;
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 50%;
-    transform: translate(-50%, -50%);
-    transition: width 600ms ease, height 600ms ease;
-}
-
-.state-btn:hover::before {
-    opacity: 1;
-}
-
-.state-btn:hover::after {
-    width: 300%;
-    height: 300%;
-}
-
-.state-btn:hover {
-    transform: translateY(-3px);
-    border-color: rgba(255, 255, 255, 0.3);
-    box-shadow: var(--shadow-lg);
-}
-
-.state-btn:active {
-    transform: translateY(-1px);
-}
-
-.state-btn.active {
-    background: rgba(255, 255, 255, 0.18);
-    border-color: rgba(255, 255, 255, 0.4);
-    box-shadow: 
-        var(--shadow-md),
-        0 0 30px currentColor,
-        inset 0 0 20px rgba(255, 255, 255, 0.1);
-    transform: scale(1.02);
-}
-
-.state-btn span {
+.state-toggle {
+    --off: rgba(255, 255, 255, 0.2);
+    --mid: rgba(255, 255, 255, 0.5);
+    --on: rgba(255, 255, 255, 0.9);
+    --transDur: 0.5s;
+    --timing: cubic-bezier(0.6, 0, 0.4, 1);
+    
+    animation: bgOff var(--transDur) var(--timing);
+    background-color: var(--off);
+    border-radius: 0.67em / 0.5em;
+    box-shadow:
+        0 0.05em 0.1em rgba(0, 0, 0, 0.1) inset,
+        0 -0.25em 0.25em rgba(0, 0, 0, 0.15) inset,
+        0 -0.5em 0 rgba(0, 0, 0, 0.1) inset,
+        0 0.1em 0.1em rgba(0, 0, 0, 0.2);
+    cursor: pointer;
     position: relative;
-    z-index: 1;
+    width: 2.25em;
+    height: 1.5em;
+    -webkit-appearance: none;
+    appearance: none;
+    -webkit-tap-highlight-color: transparent;
+    transition: all var(--transition-base);
+}
+
+.state-toggle:before {
+    animation: handleOff var(--transDur) var(--timing);
+    background-color: rgba(255, 255, 255, 0.95);
+    border-radius: 0.5em / 0.375em;
+    box-shadow:
+        0 0.175em 0.175em 0 rgba(0, 0, 0, 0.1) inset,
+        0 0.375em 0 rgba(0, 0, 0, 0.15) inset,
+        0 0.375em 0 var(--off) inset,
+        0 0.475em 0.1em rgba(0, 0, 0, 0.2) inset;
+    content: "";
+    display: block;
+    position: absolute;
+    top: 0.125em;
+    left: 0.125em;
+    width: 1em;
+    height: 0.75em;
+}
+
+.state-toggle:checked {
+    animation: bgOn var(--transDur) var(--timing) forwards;
+}
+
+.state-toggle:checked:before {
+    animation: handleOn var(--transDur) var(--timing) forwards;
+}
+
+.state-toggle:focus {
+    outline: 2px solid rgba(255, 255, 255, 0.5);
+    outline-offset: 2px;
+}
+
+.state-toggle.pristine,
+.state-toggle.pristine:before {
+    animation: none;
+}
+
+/* State-specific colors */
+.state-depressive .state-toggle {
+    --off: rgba(74, 144, 226, 0.3);
+    --mid: rgba(74, 144, 226, 0.6);
+    --on: rgba(74, 144, 226, 1);
+}
+
+.state-manic .state-toggle {
+    --off: rgba(255, 212, 59, 0.3);
+    --mid: rgba(255, 212, 59, 0.6);
+    --on: rgba(255, 212, 59, 1);
+}
+
+.state-mixed .state-toggle {
+    --off: rgba(229, 153, 215, 0.3);
+    --mid: rgba(229, 153, 215, 0.6);
+    --on: rgba(229, 153, 215, 1);
+}
+
+/* Animations */
+@keyframes bgOff {
+    from {
+        background-color: var(--on);
+    }
+    50% {
+        background-color: var(--mid);
+    }
+    to {
+        background-color: var(--off);
+    }
+}
+
+@keyframes bgOn {
+    from {
+        background-color: var(--off);
+    }
+    50% {
+        background-color: var(--mid);
+    }
+    to {
+        background-color: var(--on);
+    }
+}
+
+@keyframes handleOff {
+    from {
+        box-shadow:
+            0 0.175em 0.175em 0 rgba(0, 0, 0, 0.1) inset,
+            0 0.375em 0 rgba(0, 0, 0, 0.15) inset,
+            0 0.375em 0 var(--on) inset,
+            0 0.475em 0.1em rgba(0, 0, 0, 0.2) inset;
+        left: 1.125em;
+        width: 1em;
+    }
+    50% {
+        box-shadow:
+            0 0.175em 0.175em 0 rgba(0, 0, 0, 0.1) inset,
+            0 0.375em 0 rgba(0, 0, 0, 0.15) inset,
+            0 0.375em 0 var(--mid) inset,
+            0 0.475em 0.1em rgba(0, 0, 0, 0.2) inset;
+        left: 0.125em;
+        width: 2em;
+    }
+    to {
+        box-shadow:
+            0 0.175em 0.175em 0 rgba(0, 0, 0, 0.1) inset,
+            0 0.375em 0 rgba(0, 0, 0, 0.15) inset,
+            0 0.375em 0 var(--off) inset,
+            0 0.475em 0.1em rgba(0, 0, 0, 0.2) inset;
+        left: 0.125em;
+        width: 1em;
+    }
+}
+
+@keyframes handleOn {
+    from {
+        box-shadow:
+            0 0.175em 0.175em 0 rgba(0, 0, 0, 0.1) inset,
+            0 0.375em 0 rgba(0, 0, 0, 0.15) inset,
+            0 0.375em 0 var(--off) inset,
+            0 0.475em 0.1em rgba(0, 0, 0, 0.2) inset;
+        left: 0.125em;
+        width: 1em;
+    }
+    50% {
+        box-shadow:
+            0 0.175em 0.175em 0 rgba(0, 0, 0, 0.1) inset,
+            0 0.375em 0 rgba(0, 0, 0, 0.15) inset,
+            0 0.375em 0 var(--mid) inset,
+            0 0.475em 0.1em rgba(0, 0, 0, 0.2) inset;
+        left: 0.125em;
+        width: 2em;
+    }
+    to {
+        box-shadow:
+            0 0.175em 0.175em 0 rgba(0, 0, 0, 0.1) inset,
+            0 0.375em 0 rgba(0, 0, 0, 0.15) inset,
+            0 0.375em 0 var(--on) inset,
+            0 0.475em 0.1em rgba(0, 0, 0, 0.2) inset;
+        left: 1.125em;
+        width: 1em;
+    }
 }
 
 /* ========================================
@@ -1091,9 +1201,9 @@ footer {
         padding: var(--space-md) var(--space-sm);
     }
 
-    .state-buttons {
+    .state-toggles {
         grid-template-columns: 1fr;
-        gap: var(--space-xs);
+        gap: 1rem;
     }
 
     .stats-panel {
@@ -1138,9 +1248,6 @@ footer {
         font-size: 1.1rem;
     }
     
-    .state-btn {
-        padding: 0.875rem var(--space-xs);
-    }
 }
 
 /* ========================================
@@ -1157,7 +1264,7 @@ footer {
 }
 
 /* Focus styles for accessibility */
-.state-btn:focus-visible,
+.state-toggle:focus-visible,
 .control-btn:focus-visible {
     outline: 3px solid currentColor;
     outline-offset: 3px;

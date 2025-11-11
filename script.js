@@ -58,10 +58,11 @@ const DOM = {
     // Main elements
     app: document.getElementById('app'),
     
-    // Buttons
-    manicBtn: document.getElementById('manic-btn'),
-    mixedBtn: document.getElementById('mixed-btn'),
-    depressiveBtn: document.getElementById('depressive-btn'),
+    // Toggles
+    manicToggle: document.getElementById('manic-toggle'),
+    mixedToggle: document.getElementById('mixed-toggle'),
+    depressiveToggle: document.getElementById('depressive-toggle'),
+    allToggles: document.querySelectorAll('input[name="state-toggle"]'),
     
     // Display elements
     stateBadge: document.getElementById('state-badge'),
@@ -717,14 +718,14 @@ async function switchState(newState) {
     AppState.current = newState;
     DOM.app.className = `state-${newState}`;
 
-    // Update buttons
-    [DOM.manicBtn, DOM.mixedBtn, DOM.depressiveBtn].forEach(btn => 
-        btn.classList.remove('active')
-    );
+    // Update toggles - uncheck all, then check the active one
+    DOM.allToggles.forEach(toggle => {
+        if (toggle) toggle.checked = false;
+    });
     
-    if (newState === 'manic') DOM.manicBtn.classList.add('active');
-    else if (newState === 'mixed') DOM.mixedBtn.classList.add('active');
-    else DOM.depressiveBtn.classList.add('active');
+    if (newState === 'manic' && DOM.manicToggle) DOM.manicToggle.checked = true;
+    else if (newState === 'mixed' && DOM.mixedToggle) DOM.mixedToggle.checked = true;
+    else if (newState === 'depressive' && DOM.depressiveToggle) DOM.depressiveToggle.checked = true;
 
     // Update state badge
     if (DOM.stateText) {
@@ -845,28 +846,47 @@ function clearTimeline() {
 }
 
 // ========================================
-// EVENT LISTENERS - STATE BUTTONS
+// EVENT LISTENERS - STATE TOGGLES
 // ========================================
-if (DOM.manicBtn) {
-    DOM.manicBtn.addEventListener('click', () => {
-        playClickSound();
-        switchState('manic');
-    });
-}
+// Remove pristine class on first interaction (prevents animation on load)
+document.addEventListener('click', (e) => {
+    const tar = e.target;
+    if (tar.name === 'state-toggle' && tar.classList.contains('pristine')) {
+        tar.classList.remove('pristine');
+    }
+});
 
-if (DOM.mixedBtn) {
-    DOM.mixedBtn.addEventListener('click', () => {
-        playClickSound();
-        switchState('mixed');
+// Handle toggle changes with mutually exclusive logic
+DOM.allToggles.forEach(toggle => {
+    if (!toggle) return;
+    
+    toggle.addEventListener('change', (e) => {
+        const clickedToggle = e.target;
+        const state = clickedToggle.value;
+        
+        // If this toggle is being checked, uncheck all others and switch state
+        if (clickedToggle.checked) {
+            // Uncheck all other toggles
+            DOM.allToggles.forEach(t => {
+                if (t !== clickedToggle) {
+                    t.checked = false;
+                }
+            });
+            
+            // Remove pristine class if present
+            if (clickedToggle.classList.contains('pristine')) {
+                clickedToggle.classList.remove('pristine');
+            }
+            
+            playClickSound();
+            switchState(state);
+        } else {
+            // If trying to uncheck, prevent it (at least one must be checked)
+            // Re-check it immediately
+            clickedToggle.checked = true;
+        }
     });
-}
-
-if (DOM.depressiveBtn) {
-    DOM.depressiveBtn.addEventListener('click', () => {
-        playClickSound();
-        switchState('depressive');
-    });
-}
+});
 
 // ========================================
 // EVENT LISTENERS - KEYBOARD SHORTCUTS
