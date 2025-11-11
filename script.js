@@ -1,230 +1,582 @@
-// State management
-let currentState = 'depressive';
-let particles = [];
-let autoTransitionInterval = null;
-let thoughtIndex = 0;
+// ========================================
+// DUAL SPECTRUM - APPLICATION LOGIC
+// Professional JavaScript ES6+ Implementation
+// ========================================
 
-// Thought arrays for each state
-const manicThoughts = [
-    "I can do anything! Everything is possible!",
-    "My mind races with brilliant ideas.",
-    "I don't need sleep. I have endless energy.",
-    "I feel invincible, unstoppable, alive!",
-    "The world moves too slowly for me.",
-    "I can see connections others miss.",
-    "Everything is beautiful and perfect."
-];
-
-const depressiveThoughts = [
-    "Everything feels heavy. Time moves slowly.",
-    "I can't find the energy to move.",
-    "Nothing matters. Nothing will ever matter.",
-    "I'm exhausted but can't rest.",
-    "The world feels gray and distant.",
-    "I'm a burden to everyone around me.",
-    "Why does everything feel so difficult?"
-];
-
-const mixedThoughts = [
-    "I'm energized but empty. Restless but exhausted.",
-    "My mind races with dark thoughts.",
-    "I want to do everything and nothing at once.",
-    "I feel everything and nothing simultaneously.",
-    "The world is too fast and too slow.",
-    "I'm agitated and numb at the same time.",
-    "I can't find peace in either direction."
-];
-
-// Statistics tracking
-let stats = {
-    manic: 0,
-    mixed: 0,
-    depressive: 0
-};
-let statsStartTime = Date.now();
-let currentStateStartTime = Date.now();
-
-// Timeline data
-let timelineData = [];
-const MAX_TIMELINE_POINTS = 100;
-
-// DOM elements
-const app = document.getElementById('app');
-const manicBtn = document.getElementById('manic-btn');
-const mixedBtn = document.getElementById('mixed-btn');
-const depressiveBtn = document.getElementById('depressive-btn');
-const stateIndicator = document.querySelector('.current-state');
-const thoughtText = document.getElementById('thought-text');
-const manicAudio = document.getElementById('manic-audio');
-const depressiveAudio = document.getElementById('depressive-audio');
-const mixedAudio = document.getElementById('mixed-audio');
-const particlesContainer = document.querySelector('.particles');
-const infoPanel = document.getElementById('info-panel');
-const infoBtn = document.getElementById('info-btn');
-const closeInfoBtn = document.getElementById('close-info');
-const fullscreenBtn = document.getElementById('fullscreen-btn');
-const autoTransitionCheckbox = document.getElementById('auto-transition');
-const mouseTrail = document.getElementById('mouse-trail');
-const shareBtn = document.getElementById('share-btn');
-const sharePanel = document.getElementById('share-panel');
-const closeShareBtn = document.getElementById('close-share');
-const timelineBtn = document.getElementById('timeline-btn');
-const timelinePanel = document.getElementById('timeline-panel');
-const closeTimelineBtn = document.getElementById('close-timeline');
-const timelineCanvas = document.getElementById('timeline-canvas');
-const clearTimelineBtn = document.getElementById('clear-timeline');
-const intensitySlider = document.getElementById('intensity-slider');
-const intensityValue = document.getElementById('intensity-value');
-const manicTimeEl = document.getElementById('manic-time');
-const mixedTimeEl = document.getElementById('mixed-time');
-const depressiveTimeEl = document.getElementById('depressive-time');
-const copyLinkBtn = document.getElementById('copy-link-btn');
-const downloadImageBtn = document.getElementById('download-image-btn');
-const copyTextBtn = document.getElementById('copy-text-btn');
-const shareTextarea = document.getElementById('share-textarea');
-// Get all state images
-const stateImages = {
-    '-3': document.getElementById('image-neg3'),
-    '-2': document.getElementById('image-neg2'),
-    '-1': document.getElementById('image-neg1'),
-    '0': document.getElementById('image-0'),
-    '1': document.getElementById('image-1'),
-    '2': document.getElementById('image-2'),
-    '3': document.getElementById('image-3')
+// ========================================
+// STATE MANAGEMENT
+// ========================================
+const AppState = {
+    current: 'depressive',
+    stats: { manic: 0, mixed: 0, depressive: 0 },
+    startTime: Date.now(),
+    thoughtIndex: 0,
+    animationFrameId: null,
+    audioEnabled: false,
+    audioInitialized: false,
+    timelineData: [],
+    maxTimelinePoints: 100
 };
 
-// Current image value (0 = neutral)
-let currentImageValue = 0;
-let imageTransitionTimeout = null;
+// ========================================
+// THOUGHT CONTENT DATABASE
+// ========================================
+const thoughts = {
+    manic: [
+        "I can do anything! Everything is possible!",
+        "My mind races with brilliant ideas and endless energy.",
+        "Sleep is optional. The world is mine to conquer.",
+        "I feel invincible, unstoppable, infinitely alive!",
+        "Time bends to my will. I move faster than reality.",
+        "Every connection sparks genius. I see what others miss.",
+        "The universe conspires in my favor. Nothing can stop me."
+    ],
+    depressive: [
+        "Everything feels heavy. Time moves slowly.",
+        "I can't find the energy to move forward.",
+        "Nothing matters. Nothing will ever matter again.",
+        "Exhaustion without rest. Emptiness without end.",
+        "The world feels gray, distant, and unreachable.",
+        "I'm a burden. Everyone would be better without me.",
+        "Why does everything require so much effort?"
+    ],
+    mixed: [
+        "I'm energized but empty. Restless but exhausted.",
+        "My mind races with thoughts I don't want to have.",
+        "I want to do everything and nothing all at once.",
+        "I feel everything and nothing simultaneously.",
+        "Agitation and numbness fight for dominance.",
+        "I can't find peace in either direction.",
+        "My body moves but my soul stays still."
+    ]
+};
 
-// Sound effects using Web Audio API
-let audioContext = null;
-let audioInitialized = false;
+// ========================================
+// DOM ELEMENT CACHE
+// ========================================
+const DOM = {
+    // Main elements
+    app: document.getElementById('app'),
+    
+    // Buttons
+    manicBtn: document.getElementById('manic-btn'),
+    mixedBtn: document.getElementById('mixed-btn'),
+    depressiveBtn: document.getElementById('depressive-btn'),
+    
+    // Display elements
+    stateBadge: document.getElementById('state-badge'),
+    stateText: document.getElementById('state-text'),
+    thoughtText: document.getElementById('thought-text'),
+    
+    // Images
+    manicImage: document.getElementById('manic-image'),
+    mixedImage: document.getElementById('mixed-image'),
+    depressiveImage: document.getElementById('depressive-image'),
+    
+    // Control buttons
+    infoBtn: document.getElementById('info-btn'),
+    fullscreenBtn: document.getElementById('fullscreen-btn'),
+    shareBtn: document.getElementById('share-btn'),
+    audioBtn: document.getElementById('audio-btn'),
+    timelineBtn: document.getElementById('timeline-btn'),
+    
+    // Modals
+    infoModal: document.getElementById('info-modal'),
+    closeInfo: document.getElementById('close-info'),
+    
+    // Stats
+    manicTime: document.getElementById('manic-time'),
+    mixedTime: document.getElementById('mixed-time'),
+    depressiveTime: document.getElementById('depressive-time'),
+    
+    // Canvas
+    particlesCanvas: document.getElementById('particlesCanvas'),
+    timelineCanvas: document.getElementById('timeline-canvas'),
+    
+    // Audio elements
+    manicAudio: document.getElementById('manic-audio'),
+    mixedAudio: document.getElementById('mixed-audio'),
+    depressiveAudio: document.getElementById('depressive-audio'),
+    
+    // Timeline
+    timelinePanel: document.getElementById('timeline-panel'),
+    clearTimelineBtn: document.getElementById('clear-timeline-btn')
+};
 
-// Initialize audio context (must be called on user interaction for mobile)
-function initAudioContext() {
-    if (!audioContext) {
+// ========================================
+// AUDIO MANAGEMENT SYSTEM
+// ========================================
+class AudioManager {
+    constructor() {
+        this.context = null;
+        this.initialized = false;
+        this.currentAudio = null;
+        this.fadeDuration = 1000;
+    }
+
+    async initialize() {
+        if (this.initialized) return true;
+        
         try {
-            audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            audioInitialized = true;
-        } catch (e) {
-            console.log('Audio context not supported:', e);
+            this.context = new (window.AudioContext || window.webkitAudioContext)();
+            
+            // Resume context if suspended (mobile requirement)
+            if (this.context.state === 'suspended') {
+                await this.context.resume();
+            }
+            
+            this.initialized = true;
+            console.log('Audio system initialized');
+            return true;
+        } catch (error) {
+            console.error('Audio initialization failed:', error);
             return false;
         }
     }
-    
-    // Resume audio context if suspended (required for mobile browsers)
-    if (audioContext.state === 'suspended') {
-        audioContext.resume().then(() => {
-            console.log('Audio context resumed');
-        }).catch(err => {
-            console.log('Failed to resume audio context:', err);
+
+    async playStateAudio(state) {
+        if (!this.initialized || !AppState.audioEnabled) return;
+
+        const audioMap = {
+            manic: DOM.manicAudio,
+            mixed: DOM.mixedAudio,
+            depressive: DOM.depressiveAudio
+        };
+
+        const newAudio = audioMap[state];
+        if (!newAudio) return;
+
+        // Fade out current audio
+        if (this.currentAudio && this.currentAudio !== newAudio) {
+            await this.fadeOut(this.currentAudio);
+        }
+
+        // Fade in new audio
+        this.currentAudio = newAudio;
+        await this.fadeIn(newAudio);
+    }
+
+    async fadeOut(audio) {
+        return new Promise((resolve) => {
+            if (!audio || audio.paused) {
+                resolve();
+                return;
+            }
+
+            const startVolume = audio.volume;
+            const steps = 20;
+            const stepDuration = this.fadeDuration / steps;
+            const volumeStep = startVolume / steps;
+            let currentStep = 0;
+
+            const fadeInterval = setInterval(() => {
+                currentStep++;
+                audio.volume = Math.max(0, startVolume - (volumeStep * currentStep));
+
+                if (currentStep >= steps || audio.volume <= 0) {
+                    clearInterval(fadeInterval);
+                    audio.pause();
+                    audio.currentTime = 0;
+                    resolve();
+                }
+            }, stepDuration);
         });
     }
-    
-    return true;
-}
 
-async function playClickSound() {
-    // Initialize audio context if not already done
-    if (!audioInitialized) {
-        if (!initAudioContext()) {
-            return; // Audio not supported
-        }
-    }
-    
-    // Ensure context is resumed (async for mobile)
-    if (audioContext && audioContext.state === 'suspended') {
-        try {
-            await audioContext.resume();
-        } catch (e) {
-            console.log('Failed to resume audio context:', e);
-            return;
-        }
-    }
-    
-    if (!audioContext || audioContext.state === 'closed') {
-        return;
-    }
-    
-    try {
-        const oscillator = audioContext.createOscillator();
-        const gainNode = audioContext.createGain();
-        
-        oscillator.connect(gainNode);
-        gainNode.connect(audioContext.destination);
-        
-        oscillator.frequency.value = currentState === 'manic' ? 800 : currentState === 'mixed' ? 600 : 400;
-        oscillator.type = 'sine';
-        
-        gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
-        
-        oscillator.start(audioContext.currentTime);
-        oscillator.stop(audioContext.currentTime + 0.1);
-    } catch (e) {
-        console.log('Error playing click sound:', e);
-    }
-}
+    async fadeIn(audio) {
+        return new Promise((resolve) => {
+            if (!audio) {
+                resolve();
+                return;
+            }
 
-async function playTransitionSound() {
-    // Initialize audio context if not already done
-    if (!audioInitialized) {
-        if (!initAudioContext()) {
-            return; // Audio not supported
+            const targetVolume = AppState.current === 'manic' ? 0.4 : 
+                               AppState.current === 'mixed' ? 0.3 : 0.25;
+            const steps = 20;
+            const stepDuration = this.fadeDuration / steps;
+            const volumeStep = targetVolume / steps;
+            let currentStep = 0;
+
+            audio.volume = 0;
+            
+            const playPromise = audio.play();
+            if (playPromise !== undefined) {
+                playPromise.catch(error => {
+                    console.log('Audio play prevented:', error);
+                    resolve();
+                });
+            }
+
+            const fadeInterval = setInterval(() => {
+                currentStep++;
+                audio.volume = Math.min(targetVolume, volumeStep * currentStep);
+
+                if (currentStep >= steps || audio.volume >= targetVolume) {
+                    clearInterval(fadeInterval);
+                    resolve();
+                }
+            }, stepDuration);
+        });
+    }
+
+    stopAll() {
+        [DOM.manicAudio, DOM.mixedAudio, DOM.depressiveAudio].forEach(audio => {
+            if (audio && !audio.paused) {
+                this.fadeOut(audio);
+            }
+        });
+        this.currentAudio = null;
+    }
+
+    async toggle() {
+        AppState.audioEnabled = !AppState.audioEnabled;
+
+        if (!this.initialized && AppState.audioEnabled) {
+            await this.initialize();
         }
-    }
-    
-    // Ensure context is resumed (async for mobile)
-    if (audioContext && audioContext.state === 'suspended') {
-        try {
-            await audioContext.resume();
-        } catch (e) {
-            console.log('Failed to resume audio context:', e);
-            return;
+
+        if (AppState.audioEnabled) {
+            await this.playStateAudio(AppState.current);
+            DOM.audioBtn?.classList.add('audio-active');
+        } else {
+            this.stopAll();
+            DOM.audioBtn?.classList.remove('audio-active');
         }
-    }
-    
-    if (!audioContext || audioContext.state === 'closed') {
-        return;
-    }
-    
-    try {
-        const oscillator = audioContext.createOscillator();
-        const gainNode = audioContext.createGain();
-        
-        oscillator.connect(gainNode);
-        gainNode.connect(audioContext.destination);
-        
-        oscillator.frequency.setValueAtTime(300, audioContext.currentTime);
-        oscillator.frequency.exponentialRampToValueAtTime(600, audioContext.currentTime + 0.3);
-        oscillator.type = 'sine';
-        
-        gainNode.gain.setValueAtTime(0.15, audioContext.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
-        
-        oscillator.start(audioContext.currentTime);
-        oscillator.stop(audioContext.currentTime + 0.3);
-    } catch (e) {
-        console.log('Error playing transition sound:', e);
+
+        return AppState.audioEnabled;
     }
 }
 
-// Update statistics
-function updateStats() {
-    const now = Date.now();
-    const elapsed = (now - currentStateStartTime) / 1000; // seconds
-    
-    stats[currentState] += elapsed;
-    currentStateStartTime = now;
-    
+const audioManager = new AudioManager();
+
+// ========================================
+// PARTICLE SYSTEM
+// ========================================
+class ParticleSystem {
+    constructor(canvas) {
+        this.canvas = canvas;
+        this.ctx = canvas.getContext('2d');
+        this.particles = [];
+        this.resize();
+        this.init();
+        
+        window.addEventListener('resize', () => this.resize());
+    }
+
+    resize() {
+        this.canvas.width = window.innerWidth;
+        this.canvas.height = window.innerHeight;
+    }
+
+    init() {
+        const count = this.getParticleCount();
+        this.particles = [];
+        
+        for (let i = 0; i < count; i++) {
+            this.particles.push({
+                x: Math.random() * this.canvas.width,
+                y: Math.random() * this.canvas.height,
+                vx: (Math.random() - 0.5) * this.getSpeed(),
+                vy: (Math.random() - 0.5) * this.getSpeed(),
+                radius: Math.random() * 2 + 1,
+                opacity: Math.random() * 0.5 + 0.2
+            });
+        }
+    }
+
+    getParticleCount() {
+        const state = AppState.current;
+        if (state === 'manic') return 50;
+        if (state === 'mixed') return 35;
+        return 20;
+    }
+
+    getSpeed() {
+        const state = AppState.current;
+        if (state === 'manic') return 2.0;
+        if (state === 'mixed') return 1.2;
+        return 0.6;
+    }
+
+    update() {
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        
+        this.particles.forEach(particle => {
+            particle.x += particle.vx;
+            particle.y += particle.vy;
+
+            // Wrap around screen
+            if (particle.x < 0) particle.x = this.canvas.width;
+            if (particle.x > this.canvas.width) particle.x = 0;
+            if (particle.y < 0) particle.y = this.canvas.height;
+            if (particle.y > this.canvas.height) particle.y = 0;
+
+            // Draw particle
+            this.ctx.beginPath();
+            this.ctx.arc(particle.x, particle.y, particle.radius, 0, Math.PI * 2);
+            this.ctx.fillStyle = `rgba(255, 255, 255, ${particle.opacity})`;
+            this.ctx.fill();
+        });
+    }
+}
+
+// ========================================
+// TIMELINE VISUALIZATION
+// ========================================
+class TimelineChart {
+    constructor(canvas) {
+        this.canvas = canvas;
+        this.ctx = canvas.getContext('2d');
+    }
+
+    draw(data) {
+        if (!this.canvas || !this.ctx) return;
+        
+        const width = this.canvas.width = this.canvas.offsetWidth;
+        const height = this.canvas.height = this.canvas.offsetHeight;
+        
+        this.ctx.clearRect(0, 0, width, height);
+        
+        if (data.length < 2) return;
+
+        // Configuration
+        const padding = 30;
+        const graphWidth = width - padding * 2;
+        const graphHeight = height - padding * 2;
+
+        // State positions
+        const stateY = {
+            manic: padding,
+            mixed: padding + graphHeight / 2,
+            depressive: padding + graphHeight
+        };
+
+        // State colors
+        const colors = {
+            manic: '#ffd43b',
+            mixed: '#e599d7',
+            depressive: '#4a90e2'
+        };
+
+        // Find time range
+        const times = data.map(d => d.time);
+        const minTime = Math.min(...times);
+        const maxTime = Math.max(...times);
+        const timeRange = maxTime - minTime || 1;
+
+        // Draw grid lines
+        this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+        this.ctx.lineWidth = 1;
+        
+        for (let i = 0; i <= 4; i++) {
+            const y = padding + (graphHeight / 4) * i;
+            this.ctx.beginPath();
+            this.ctx.moveTo(padding, y);
+            this.ctx.lineTo(width - padding, y);
+            this.ctx.stroke();
+        }
+
+        // Draw state labels
+        this.ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+        this.ctx.font = '12px Inter, sans-serif';
+        this.ctx.textAlign = 'right';
+        this.ctx.fillText('Manic', padding - 10, stateY.manic + 5);
+        this.ctx.fillText('Mixed', padding - 10, stateY.mixed + 5);
+        this.ctx.fillText('Depressive', padding - 10, stateY.depressive + 5);
+
+        // Draw lines and points
+        this.ctx.lineWidth = 3;
+        this.ctx.lineCap = 'round';
+        this.ctx.lineJoin = 'round';
+
+        for (let i = 0; i < data.length - 1; i++) {
+            const point1 = data[i];
+            const point2 = data[i + 1];
+            
+            const x1 = padding + ((point1.time - minTime) / timeRange) * graphWidth;
+            const y1 = stateY[point1.state];
+            const x2 = padding + ((point2.time - minTime) / timeRange) * graphWidth;
+            const y2 = stateY[point2.state];
+            
+            // Draw line
+            this.ctx.strokeStyle = colors[point1.state];
+            this.ctx.beginPath();
+            this.ctx.moveTo(x1, y1);
+            this.ctx.lineTo(x2, y2);
+            this.ctx.stroke();
+            
+            // Draw point
+            this.ctx.fillStyle = colors[point1.state];
+            this.ctx.beginPath();
+            this.ctx.arc(x1, y1, 5, 0, Math.PI * 2);
+            this.ctx.fill();
+        }
+        
+        // Draw last point
+        if (data.length > 0) {
+            const lastPoint = data[data.length - 1];
+            const x = padding + ((lastPoint.time - minTime) / timeRange) * graphWidth;
+            const y = stateY[lastPoint.state];
+            
+            this.ctx.fillStyle = colors[lastPoint.state];
+            this.ctx.beginPath();
+            this.ctx.arc(x, y, 6, 0, Math.PI * 2);
+            this.ctx.fill();
+            
+            // Pulse effect on last point
+            this.ctx.strokeStyle = colors[lastPoint.state];
+            this.ctx.lineWidth = 2;
+            this.ctx.beginPath();
+            this.ctx.arc(x, y, 10, 0, Math.PI * 2);
+            this.ctx.stroke();
+        }
+    }
+}
+
+// ========================================
+// INITIALIZE SYSTEMS
+// ========================================
+let particleSystem = null;
+let timelineChart = null;
+
+if (DOM.particlesCanvas) {
+    particleSystem = new ParticleSystem(DOM.particlesCanvas);
+}
+
+if (DOM.timelineCanvas) {
+    timelineChart = new TimelineChart(DOM.timelineCanvas);
+}
+
+// ========================================
+// ANIMATION LOOP
+// ========================================
+function animate() {
+    if (particleSystem) {
+        particleSystem.update();
+    }
+    AppState.animationFrameId = requestAnimationFrame(animate);
+}
+
+// ========================================
+// STATE TRANSITION MANAGER
+// ========================================
+async function switchState(newState) {
+    if (AppState.current === newState) return;
+
+    // Update statistics
+    const elapsed = (Date.now() - AppState.startTime) / 1000;
+    AppState.stats[AppState.current] += elapsed;
+    AppState.startTime = Date.now();
     updateStatsDisplay();
+
+    // Add to timeline
+    addTimelinePoint(newState);
+
+    // Update state
+    const previousState = AppState.current;
+    AppState.current = newState;
+    DOM.app.className = `state-${newState}`;
+
+    // Update buttons
+    [DOM.manicBtn, DOM.mixedBtn, DOM.depressiveBtn].forEach(btn => 
+        btn.classList.remove('active')
+    );
+    
+    if (newState === 'manic') DOM.manicBtn.classList.add('active');
+    else if (newState === 'mixed') DOM.mixedBtn.classList.add('active');
+    else DOM.depressiveBtn.classList.add('active');
+
+    // Update state badge
+    if (DOM.stateText) {
+        DOM.stateText.textContent = newState.charAt(0).toUpperCase() + newState.slice(1);
+    }
+
+    // Update images with smooth transition
+    [DOM.manicImage, DOM.mixedImage, DOM.depressiveImage].forEach(img => {
+        if (img) {
+            img.classList.remove('active');
+            img.classList.add('hidden');
+        }
+    });
+
+    const activeImage = newState === 'manic' ? DOM.manicImage :
+                       newState === 'mixed' ? DOM.mixedImage :
+                       DOM.depressiveImage;
+    
+    if (activeImage) {
+        setTimeout(() => {
+            activeImage.classList.remove('hidden');
+            activeImage.classList.add('active');
+        }, 100);
+    }
+
+    // Update thought
+    updateThought(newState);
+
+    // Reinitialize particles with smooth transition
+    if (particleSystem) {
+        setTimeout(() => {
+            particleSystem.init();
+        }, 200);
+    }
+
+    // Update audio
+    if (AppState.audioEnabled) {
+        await audioManager.playStateAudio(newState);
+    }
+
+    // Restart thought rotation
+    startThoughtRotation();
 }
 
+// ========================================
+// THOUGHT MANAGEMENT
+// ========================================
+function updateThought(state) {
+    if (!DOM.thoughtText) return;
+    
+    AppState.thoughtIndex = Math.floor(Math.random() * thoughts[state].length);
+    
+    DOM.thoughtText.style.opacity = '0';
+    
+    setTimeout(() => {
+        DOM.thoughtText.textContent = thoughts[state][AppState.thoughtIndex];
+        DOM.thoughtText.style.opacity = '1';
+    }, 400);
+}
+
+let thoughtInterval;
+
+function startThoughtRotation() {
+    clearInterval(thoughtInterval);
+    
+    const intervals = {
+        manic: 3500,
+        mixed: 4500,
+        depressive: 6000
+    };
+    
+    thoughtInterval = setInterval(() => {
+        if (!DOM.thoughtText) return;
+        
+        const state = AppState.current;
+        AppState.thoughtIndex = (AppState.thoughtIndex + 1) % thoughts[state].length;
+        
+        DOM.thoughtText.style.opacity = '0';
+        setTimeout(() => {
+            DOM.thoughtText.textContent = thoughts[state][AppState.thoughtIndex];
+            DOM.thoughtText.style.opacity = '1';
+        }, 400);
+    }, intervals[AppState.current]);
+}
+
+// ========================================
+// STATISTICS MANAGEMENT
+// ========================================
 function updateStatsDisplay() {
-    manicTimeEl.textContent = formatTime(stats.manic);
-    mixedTimeEl.textContent = formatTime(stats.mixed);
-    depressiveTimeEl.textContent = formatTime(stats.depressive);
+    if (DOM.manicTime) DOM.manicTime.textContent = formatTime(AppState.stats.manic);
+    if (DOM.mixedTime) DOM.mixedTime.textContent = formatTime(AppState.stats.mixed);
+    if (DOM.depressiveTime) DOM.depressiveTime.textContent = formatTime(AppState.stats.depressive);
 }
 
 function formatTime(seconds) {
@@ -233,928 +585,263 @@ function formatTime(seconds) {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
 }
 
-// Initialize particles
-function createParticles() {
-    const particleCount = currentState === 'manic' ? 30 : currentState === 'mixed' ? 20 : 15;
-    
-    // Clear existing particles
-    particlesContainer.innerHTML = '';
-    particles = [];
-    
-    for (let i = 0; i < particleCount; i++) {
-        const particle = document.createElement('div');
-        particle.className = 'particle';
-        
-        // Random size
-        const size = currentState === 'manic' 
-            ? Math.random() * 8 + 4 
-            : Math.random() * 6 + 3;
-        particle.style.width = `${size}px`;
-        particle.style.height = `${size}px`;
-        
-        // Random position
-        particle.style.left = `${Math.random() * 100}%`;
-        particle.style.top = `${Math.random() * 100}%`;
-        
-        // Random animation delay
-        particle.style.animationDelay = `${Math.random() * 20}s`;
-        particle.style.animationDuration = currentState === 'manic' 
-            ? `${Math.random() * 4 + 4}s`
-            : `${Math.random() * 10 + 10}s`;
-        
-        particlesContainer.appendChild(particle);
-        particles.push(particle);
-    }
-}
-
-// Update thought text
-function updateThought() {
-    let thoughts;
-    if (currentState === 'manic') {
-        thoughts = manicThoughts;
-    } else if (currentState === 'mixed') {
-        thoughts = mixedThoughts;
-    } else {
-        thoughts = depressiveThoughts;
-    }
-    
-    thoughtIndex = (thoughtIndex + 1) % thoughts.length;
-    thoughtText.style.opacity = '0';
-    
-    setTimeout(() => {
-        thoughtText.textContent = thoughts[thoughtIndex];
-        thoughtText.style.opacity = '1';
-    }, 300);
-}
-
-// Switch state function with synchronized transitions
-function switchState(newState) {
-    if (currentState === newState) return;
-    
-    // Update statistics
-    updateStats();
-    
-    // Play transition sound
-    playTransitionSound();
-    
-    // Calculate transition duration based on image steps
-    const currentImage = currentImageValue;
-    let targetImage = 0;
-    if (newState === 'manic') targetImage = 3;
-    else if (newState === 'mixed') targetImage = 0;
-    else targetImage = -3;
-    
-    const imageSteps = Math.abs(targetImage - currentImage);
-    const transitionDuration = Math.max(2000, imageSteps * 600); // At least 2s, or based on steps
-    
-    // Smooth background transition - synchronized with image transition
-    app.style.transition = `background ${transitionDuration}ms cubic-bezier(0.4, 0, 0.2, 1),
-                            color ${transitionDuration}ms cubic-bezier(0.4, 0, 0.2, 1)`;
-    
-    // Remove all state classes
-    app.classList.remove('state-manic', 'state-mixed', 'state-depressive');
-    
-    // Small delay to ensure smooth transition start
-    requestAnimationFrame(() => {
-        app.classList.add(`state-${newState}`);
-    });
-    
-    // Update buttons with smooth transition
-    manicBtn.classList.remove('active');
-    mixedBtn.classList.remove('active');
-    depressiveBtn.classList.remove('active');
-    
-    if (newState === 'manic') manicBtn.classList.add('active');
-    else if (newState === 'mixed') mixedBtn.classList.add('active');
-    else depressiveBtn.classList.add('active');
-    
-    // Update indicator with fade
-    stateIndicator.style.opacity = '0';
-    setTimeout(() => {
-        stateIndicator.textContent = newState.charAt(0).toUpperCase() + newState.slice(1);
-        stateIndicator.style.opacity = '1';
-    }, 200);
-    
-    // Update thought with fade
-    let thoughts;
-    if (newState === 'manic') thoughts = manicThoughts;
-    else if (newState === 'mixed') thoughts = mixedThoughts;
-    else thoughts = depressiveThoughts;
-    
-    thoughtIndex = Math.floor(Math.random() * thoughts.length);
-    thoughtText.style.opacity = '0';
-    setTimeout(() => {
-        thoughtText.textContent = thoughts[thoughtIndex];
-        thoughtText.style.opacity = '1';
-    }, 300);
-    
-    // Update audio with crossfade
-    const fadeOutDuration = 500;
-    const fadeInDuration = 500;
-    
-    // Fade out current audio
-    const currentAudio = currentState === 'manic' ? manicAudio : 
-                        currentState === 'mixed' ? mixedAudio : depressiveAudio;
-    if (currentAudio && !currentAudio.paused) {
-        const fadeOutInterval = setInterval(() => {
-            if (currentAudio.volume > 0.05) {
-                currentAudio.volume = Math.max(0, currentAudio.volume - 0.05);
-            } else {
-                currentAudio.pause();
-                currentAudio.currentTime = 0;
-                clearInterval(fadeOutInterval);
-            }
-        }, fadeOutDuration / 20);
-    }
-    
-    // Fade in new audio
-    setTimeout(() => {
-        manicAudio.pause();
-        mixedAudio.pause();
-        depressiveAudio.pause();
-        manicAudio.currentTime = 0;
-        mixedAudio.currentTime = 0;
-        depressiveAudio.currentTime = 0;
-        
-        const audio = newState === 'manic' ? manicAudio : newState === 'mixed' ? mixedAudio : depressiveAudio;
-        const targetVolume = newState === 'manic' ? 0.3 : newState === 'mixed' ? 0.25 : 0.2;
-        audio.volume = 0;
-        audio.play().catch(() => {});
-        
-        const fadeInInterval = setInterval(() => {
-            if (audio.volume < targetVolume) {
-                audio.volume = Math.min(targetVolume, audio.volume + 0.02);
-            } else {
-                clearInterval(fadeInInterval);
-            }
-        }, fadeInDuration / (targetVolume * 50));
-    }, fadeOutDuration);
-    
-    // Recreate particles with delay
-    setTimeout(() => {
-        createParticles();
-    }, transitionDuration * 0.3);
-    
-    // Restart thought rotation
-    startThoughtRotation();
-    
-    // Add to timeline
-    addTimelinePoint(newState);
-    
-    // Update state images - this will handle the progressive transition
-    updateStateImages(newState);
-    
-    // Update current state
-    currentState = newState;
-    currentStateStartTime = Date.now();
-}
-
-// Hide all images with smooth fade out
-function hideAllImages() {
-    Object.values(stateImages).forEach(img => {
-        if (img) {
-            img.classList.remove('active');
-            // Smooth fade out
-            img.style.transition = 'opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
-            img.style.opacity = '0';
-            img.style.visibility = 'hidden';
-            img.style.transform = 'scale(0.95) translateY(10px)';
-        }
-    });
-}
-
-// Show a specific image by value with smooth fade in
-function showImage(value) {
-    const img = stateImages[String(value)];
-    if (img) {
-        // Reset transition for smooth fade in
-        img.style.transition = 'opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1), transform 0.8s cubic-bezier(0.4, 0, 0.2, 1)';
-        img.style.visibility = 'visible';
-        img.style.zIndex = '25';
-        img.classList.add('active');
-        
-        // Use requestAnimationFrame for smooth animation
-        requestAnimationFrame(() => {
-            img.style.opacity = '1';
-            img.style.transform = 'scale(1) translateY(0)';
-        });
-        
-        currentImageValue = value;
-        console.log(`Showing image value: ${value}`);
-    }
-}
-
-// Progressive image transition - smoothly transitions through images with synchronized background
-function transitionToImage(targetValue) {
-    // Clear any existing transition
-    if (imageTransitionTimeout) {
-        clearTimeout(imageTransitionTimeout);
-        imageTransitionTimeout = null;
-    }
-    
-    const current = currentImageValue;
-    const target = targetValue;
-    
-    // If already at target, just show it
-    if (current === target) {
-        hideAllImages();
-        showImage(target);
-        return;
-    }
-    
-    // Determine direction and steps
-    const direction = target > current ? 1 : -1;
-    const steps = Math.abs(target - current);
-    
-    // Calculate transition duration - longer for more steps
-    const baseDelay = 600; // 600ms between each image for smooth transitions
-    const totalDuration = steps * baseDelay;
-    
-    // Start from current position
-    let stepIndex = 0;
-    
-    function nextStep() {
-        if (stepIndex <= steps) {
-            const nextValue = current + (direction * stepIndex);
-            
-            // Smooth crossfade - fade out current, fade in next
-            if (stepIndex === 0) {
-                // First step - just show current
-                hideAllImages();
-                showImage(nextValue);
-            } else {
-                // Subsequent steps - crossfade
-                const prevValue = current + (direction * (stepIndex - 1));
-                const prevImg = stateImages[String(prevValue)];
-                const nextImg = stateImages[String(nextValue)];
-                
-                if (prevImg && nextImg) {
-                    // Fade out previous
-                    prevImg.style.transition = 'opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
-                    prevImg.style.opacity = '0';
-                    
-                    // Fade in next
-                    setTimeout(() => {
-                        hideAllImages();
-                        showImage(nextValue);
-                    }, 300); // Halfway through fade out
-                } else {
-                    hideAllImages();
-                    showImage(nextValue);
-                }
-            }
-            
-            if (stepIndex < steps) {
-                // Continue to next step
-                stepIndex++;
-                imageTransitionTimeout = setTimeout(nextStep, baseDelay);
-            } else {
-                // Transition complete
-                imageTransitionTimeout = null;
-            }
-        }
-    }
-    
-    // Start transition immediately
-    nextStep();
-}
-
-// Update state images based on current state with progressive transitions
-function updateStateImages(state) {
-    // Clear any pending transitions first
-    if (imageTransitionTimeout) {
-        clearTimeout(imageTransitionTimeout);
-        imageTransitionTimeout = null;
-    }
-    
-    if (state === 'manic') {
-        // Progressive transition from current to 3
-        transitionToImage(3);
-    } else if (state === 'mixed') {
-        // Transition to neutral (0)
-        transitionToImage(0);
-    } else if (state === 'depressive') {
-        // Progressive transition from current to -3
-        transitionToImage(-3);
-    }
-}
-
-// Switch to manic state
-function switchToManic() {
-    switchState('manic');
-}
-
-// Switch to mixed state
-function switchToMixed() {
-    switchState('mixed');
-}
-
-// Switch to depressive state
-function switchToDepressive() {
-    switchState('depressive');
-}
-
-// Initialize audio on first user interaction
-function initAudioOnInteraction() {
-    if (!audioInitialized) {
-        initAudioContext();
-    }
-}
-
-// Event listeners with audio initialization
-manicBtn.addEventListener('click', () => {
-    initAudioOnInteraction();
-    playClickSound();
-    switchToManic();
-});
-mixedBtn.addEventListener('click', () => {
-    initAudioOnInteraction();
-    playClickSound();
-    switchToMixed();
-});
-depressiveBtn.addEventListener('click', () => {
-    initAudioOnInteraction();
-    playClickSound();
-    switchToDepressive();
-});
-
-// Also initialize on touch events for mobile
-manicBtn.addEventListener('touchstart', initAudioOnInteraction, { once: true, passive: true });
-mixedBtn.addEventListener('touchstart', initAudioOnInteraction, { once: true, passive: true });
-depressiveBtn.addEventListener('touchstart', initAudioOnInteraction, { once: true, passive: true });
-
-// Keyboard shortcuts
-document.addEventListener('keydown', (e) => {
-    initAudioOnInteraction();
-    if (e.key === 'm' || e.key === 'M') {
-        playClickSound();
-        switchToManic();
-    } else if (e.key === 'x' || e.key === 'X') {
-        playClickSound();
-        switchToMixed();
-    } else if (e.key === 'd' || e.key === 'D') {
-        playClickSound();
-        switchToDepressive();
-    }
-});
-
-// Remove duplicate initialization - it's now at the end
-
-// Handle visibility change (pause audio when tab is hidden)
-document.addEventListener('visibilitychange', () => {
-    if (document.hidden) {
-        manicAudio.pause();
-        depressiveAudio.pause();
-    } else {
-        if (currentState === 'manic') {
-            manicAudio.play().catch(() => {});
-        } else {
-            depressiveAudio.play().catch(() => {});
-        }
-    }
-});
-
-// Add smooth transitions on state change
-let transitionTimeout;
-function addTransitionEffect() {
-    clearTimeout(transitionTimeout);
-    app.style.transition = 'all 0.6s ease-in-out';
-    transitionTimeout = setTimeout(() => {
-        app.style.transition = '';
-    }, 600);
-}
-
-// Enhanced button interactions
-manicBtn.addEventListener('mouseenter', () => {
-    if (currentState !== 'manic') {
-        manicBtn.style.transform = 'scale(1.1)';
-    }
-});
-
-manicBtn.addEventListener('mouseleave', () => {
-    if (currentState !== 'manic') {
-        manicBtn.style.transform = 'scale(1)';
-    }
-});
-
-depressiveBtn.addEventListener('mouseenter', () => {
-    if (currentState !== 'depressive') {
-        depressiveBtn.style.transform = 'scale(1.1)';
-    }
-});
-
-depressiveBtn.addEventListener('mouseleave', () => {
-    if (currentState !== 'depressive') {
-        depressiveBtn.style.transform = 'scale(1)';
-    }
-});
-
-// Info panel controls
-infoBtn.addEventListener('click', () => {
-    infoPanel.classList.remove('hidden');
-});
-
-closeInfoBtn.addEventListener('click', () => {
-    infoPanel.classList.add('hidden');
-});
-
-// Close info panel on background click
-infoPanel.addEventListener('click', (e) => {
-    if (e.target === infoPanel) {
-        infoPanel.classList.add('hidden');
-    }
-});
-
-// Fullscreen functionality
-fullscreenBtn.addEventListener('click', () => {
-    if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen().catch(err => {
-            console.log('Fullscreen not supported:', err);
-        });
-        fullscreenBtn.innerHTML = '<span>⛶</span>';
-    } else {
-        document.exitFullscreen();
-        fullscreenBtn.innerHTML = '<span>⛶</span>';
-    }
-});
-
-// Handle fullscreen change
-document.addEventListener('fullscreenchange', () => {
-    if (document.fullscreenElement) {
-        fullscreenBtn.innerHTML = '<span>⛶</span>';
-    } else {
-        fullscreenBtn.innerHTML = '<span>⛶</span>';
-    }
-});
-
-// Auto-transition functionality
-autoTransitionCheckbox.addEventListener('change', (e) => {
-    if (e.target.checked) {
-        // Start auto-transitioning every 8 seconds
-        autoTransitionInterval = setInterval(() => {
-            const states = ['manic', 'mixed', 'depressive'];
-            const currentIndex = states.indexOf(currentState);
-            const nextIndex = (currentIndex + 1) % states.length;
-            switchState(states[nextIndex]);
-        }, 8000);
-    } else {
-        // Stop auto-transition
-        if (autoTransitionInterval) {
-            clearInterval(autoTransitionInterval);
-            autoTransitionInterval = null;
-        }
-    }
-});
-
-// Mouse trail effect (only on non-touch devices)
-let mouseX = 0;
-let mouseY = 0;
-let trailX = 0;
-let trailY = 0;
-const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-
-if (!isTouchDevice && mouseTrail) {
-    document.addEventListener('mousemove', (e) => {
-        mouseX = e.clientX;
-        mouseY = e.clientY;
-        mouseTrail.style.opacity = '1';
-    });
-
-    function animateMouseTrail() {
-        trailX += (mouseX - trailX) * 0.1;
-        trailY += (mouseY - trailY) * 0.1;
-        
-        mouseTrail.style.left = `${trailX - 10}px`;
-        mouseTrail.style.top = `${trailY - 10}px`;
-        
-        requestAnimationFrame(animateMouseTrail);
-    }
-
-    animateMouseTrail();
-
-    // Hide mouse trail when mouse leaves window
-    document.addEventListener('mouseleave', () => {
-        mouseTrail.style.opacity = '0';
-    });
-}
-
-// Hide mobile hint after first interaction
-const mobileHint = document.getElementById('mobile-hint');
-if (mobileHint && isTouchDevice) {
-    let hintHidden = false;
-    const hideHint = () => {
-        if (!hintHidden) {
-            mobileHint.style.opacity = '0';
-            setTimeout(() => {
-                mobileHint.style.display = 'none';
-            }, 500);
-            hintHidden = true;
-        }
-    };
-    
-    app.addEventListener('touchstart', hideHint, { once: true });
-    manicBtn.addEventListener('click', hideHint, { once: true });
-    mixedBtn.addEventListener('click', hideHint, { once: true });
-    depressiveBtn.addEventListener('click', hideHint, { once: true });
-}
-
-// Rotate thoughts periodically
-let thoughtRotationInterval = null;
-
-function startThoughtRotation() {
-    // Clear existing interval
-    if (thoughtRotationInterval) {
-        clearInterval(thoughtRotationInterval);
-    }
-    
-    // Set interval based on current state
-    let interval;
-    if (currentState === 'manic') {
-        interval = 3000;
-    } else if (currentState === 'mixed') {
-        interval = 4000;
-    } else {
-        interval = 5000;
-    }
-    
-    thoughtRotationInterval = setInterval(() => {
-        updateThought();
-    }, interval);
-}
-
-// Start initial thought rotation
-startThoughtRotation();
-
-// Timeline functions
-function addTimelinePoint(state) {
-    const now = Date.now();
-    timelineData.push({ state, time: now });
-    
-    // Keep only last MAX_TIMELINE_POINTS
-    if (timelineData.length > MAX_TIMELINE_POINTS) {
-        timelineData.shift();
-    }
-    
-    drawTimeline();
-}
-
-function drawTimeline() {
-    const ctx = timelineCanvas.getContext('2d');
-    const width = timelineCanvas.width = timelineCanvas.offsetWidth;
-    const height = timelineCanvas.height = timelineCanvas.offsetHeight;
-    
-    ctx.clearRect(0, 0, width, height);
-    
-    if (timelineData.length < 2) return;
-    
-    // Find time range
-    const times = timelineData.map(d => d.time);
-    const minTime = Math.min(...times);
-    const maxTime = Math.max(...times);
-    const timeRange = maxTime - minTime || 1;
-    
-    // State colors
-    const colors = {
-        manic: '#ffd93d',
-        mixed: '#d4a5d4',
-        depressive: '#eaeaea'
-    };
-    
-    // Draw grid
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
-    ctx.lineWidth = 1;
-    for (let i = 0; i <= 5; i++) {
-        const y = (height / 5) * i;
-        ctx.beginPath();
-        ctx.moveTo(0, y);
-        ctx.lineTo(width, y);
-        ctx.stroke();
-    }
-    
-    // Draw timeline
-    const padding = 20;
-    const graphHeight = height - padding * 2;
-    const graphWidth = width - padding * 2;
-    
-    // State positions (manic = top, mixed = middle, depressive = bottom)
-    const stateY = {
-        manic: padding,
-        mixed: padding + graphHeight / 2,
-        depressive: padding + graphHeight
-    };
-    
-    // Draw lines
-    ctx.lineWidth = 2;
-    for (let i = 0; i < timelineData.length - 1; i++) {
-        const point1 = timelineData[i];
-        const point2 = timelineData[i + 1];
-        
-        const x1 = padding + ((point1.time - minTime) / timeRange) * graphWidth;
-        const y1 = stateY[point1.state];
-        const x2 = padding + ((point2.time - minTime) / timeRange) * graphWidth;
-        const y2 = stateY[point2.state];
-        
-        ctx.strokeStyle = colors[point1.state];
-        ctx.beginPath();
-        ctx.moveTo(x1, y1);
-        ctx.lineTo(x2, y2);
-        ctx.stroke();
-        
-        // Draw point
-        ctx.fillStyle = colors[point1.state];
-        ctx.beginPath();
-        ctx.arc(x1, y1, 4, 0, Math.PI * 2);
-        ctx.fill();
-    }
-    
-    // Draw last point
-    if (timelineData.length > 0) {
-        const lastPoint = timelineData[timelineData.length - 1];
-        const x = padding + ((lastPoint.time - minTime) / timeRange) * graphWidth;
-        const y = stateY[lastPoint.state];
-        
-        ctx.fillStyle = colors[lastPoint.state];
-        ctx.beginPath();
-        ctx.arc(x, y, 4, 0, Math.PI * 2);
-        ctx.fill();
-    }
-}
-
-// Timeline panel controls
-timelineBtn.addEventListener('click', () => {
-    timelinePanel.classList.remove('hidden');
-    drawTimeline();
-});
-
-closeTimelineBtn.addEventListener('click', () => {
-    timelinePanel.classList.add('hidden');
-});
-
-timelinePanel.addEventListener('click', (e) => {
-    if (e.target === timelinePanel) {
-        timelinePanel.classList.add('hidden');
-    }
-});
-
-clearTimelineBtn.addEventListener('click', () => {
-    timelineData = [];
-    drawTimeline();
-});
-
-// Share functionality
-shareBtn.addEventListener('click', () => {
-    sharePanel.classList.remove('hidden');
-    updateShareText();
-});
-
-closeShareBtn.addEventListener('click', () => {
-    sharePanel.classList.add('hidden');
-});
-
-sharePanel.addEventListener('click', (e) => {
-    if (e.target === sharePanel) {
-        sharePanel.classList.add('hidden');
-    }
-});
-
-function updateShareText() {
-    const totalTime = stats.manic + stats.mixed + stats.depressive;
-    const manicPercent = totalTime > 0 ? ((stats.manic / totalTime) * 100).toFixed(1) : 0;
-    const mixedPercent = totalTime > 0 ? ((stats.mixed / totalTime) * 100).toFixed(1) : 0;
-    const depressivePercent = totalTime > 0 ? ((stats.depressive / totalTime) * 100).toFixed(1) : 0;
-    
-    const text = `Dual Spectrum - An Interactive Expression of Bipolar I Disorder
-
-Time Spent:
-- Manic: ${formatTime(stats.manic)} (${manicPercent}%)
-- Mixed: ${formatTime(stats.mixed)} (${mixedPercent}%)
-- Depressive: ${formatTime(stats.depressive)} (${depressivePercent}%)
-
-Total Time: ${formatTime(totalTime)}
-
-Current State: ${currentState.charAt(0).toUpperCase() + currentState.slice(1)}
-
-Experience this interactive artwork at: ${window.location.href}
-
-Destiny A., Christian H., Thomas M., & Aran S. (2025). Dual Spectrum [Digital artwork]. Northwest Vista.`;
-    
-    shareTextarea.value = text;
-}
-
-copyLinkBtn.addEventListener('click', () => {
-    navigator.clipboard.writeText(window.location.href).then(() => {
-        copyLinkBtn.textContent = 'Copied!';
-        setTimeout(() => {
-            copyLinkBtn.textContent = 'Copy Link';
-        }, 2000);
-    });
-});
-
-copyTextBtn.addEventListener('click', () => {
-    shareTextarea.select();
-    document.execCommand('copy');
-    copyTextBtn.textContent = 'Copied!';
-    setTimeout(() => {
-        copyTextBtn.textContent = 'Copy Text';
-    }, 2000);
-});
-
-downloadImageBtn.addEventListener('click', () => {
-    // Use html2canvas if available, otherwise use a simple screenshot method
-    if (typeof html2canvas !== 'undefined') {
-        html2canvas(app).then(canvas => {
-            canvas.toBlob(blob => {
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'dual-spectrum-artwork.png';
-                a.click();
-                URL.revokeObjectURL(url);
-            });
-        });
-    } else {
-        // Fallback: try to use browser's screenshot API or show instructions
-        alert('To download an image, you can use your browser\'s screenshot feature or install html2canvas library.');
-    }
-});
-
-// Intensity slider
-intensitySlider.addEventListener('input', (e) => {
-    const value = parseFloat(e.target.value);
-    intensityValue.textContent = `${Math.round(value * 100)}%`;
-    
-    // Apply intensity to CSS variable
-    document.documentElement.style.setProperty('--intensity', value);
-    
-    // Adjust animation speeds
-    const speedMultiplier = 1 / value;
-    app.style.setProperty('--transition-fast', `${0.3 * speedMultiplier}s`);
-    app.style.setProperty('--transition-medium', `${0.6 * speedMultiplier}s`);
-    app.style.setProperty('--transition-slow', `${1.2 * speedMultiplier}s`);
-});
-
-// Update statistics every second
+// Update stats every second
 setInterval(() => {
-    const now = Date.now();
-    const elapsed = (now - currentStateStartTime) / 1000;
-    stats[currentState] += elapsed;
-    currentStateStartTime = now;
+    const elapsed = (Date.now() - AppState.startTime) / 1000;
+    AppState.stats[AppState.current] += elapsed;
+    AppState.startTime = Date.now();
     updateStatsDisplay();
 }, 1000);
 
-// Swipe gesture support for mobile
+// ========================================
+// TIMELINE MANAGEMENT
+// ========================================
+function addTimelinePoint(state) {
+    AppState.timelineData.push({
+        state: state,
+        time: Date.now()
+    });
+
+    // Keep only last MAX points
+    if (AppState.timelineData.length > AppState.maxTimelinePoints) {
+        AppState.timelineData.shift();
+    }
+
+    // Update timeline chart if visible
+    if (DOM.timelinePanel && !DOM.timelinePanel.classList.contains('hidden') && timelineChart) {
+        timelineChart.draw(AppState.timelineData);
+    }
+}
+
+function clearTimeline() {
+    AppState.timelineData = [];
+    if (timelineChart) {
+        timelineChart.draw([]);
+    }
+}
+
+// ========================================
+// EVENT LISTENERS - STATE BUTTONS
+// ========================================
+if (DOM.manicBtn) {
+    DOM.manicBtn.addEventListener('click', () => switchState('manic'));
+}
+
+if (DOM.mixedBtn) {
+    DOM.mixedBtn.addEventListener('click', () => switchState('mixed'));
+}
+
+if (DOM.depressiveBtn) {
+    DOM.depressiveBtn.addEventListener('click', () => switchState('depressive'));
+}
+
+// ========================================
+// EVENT LISTENERS - KEYBOARD SHORTCUTS
+// ========================================
+document.addEventListener('keydown', (e) => {
+    // Ignore if user is typing in an input
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+    
+    const key = e.key.toLowerCase();
+    
+    if (key === 'm') switchState('manic');
+    else if (key === 'x') switchState('mixed');
+    else if (key === 'd') switchState('depressive');
+    else if (key === 'a' && DOM.audioBtn) DOM.audioBtn.click();
+    else if (key === 'i' && DOM.infoBtn) DOM.infoBtn.click();
+    else if (key === 'f' && DOM.fullscreenBtn) DOM.fullscreenBtn.click();
+});
+
+// ========================================
+// EVENT LISTENERS - MODAL CONTROLS
+// ========================================
+if (DOM.infoBtn && DOM.infoModal) {
+    DOM.infoBtn.addEventListener('click', () => {
+        DOM.infoModal.classList.add('visible');
+    });
+}
+
+if (DOM.closeInfo && DOM.infoModal) {
+    DOM.closeInfo.addEventListener('click', () => {
+        DOM.infoModal.classList.remove('visible');
+    });
+    
+    DOM.infoModal.addEventListener('click', (e) => {
+        if (e.target === DOM.infoModal) {
+            DOM.infoModal.classList.remove('visible');
+        }
+    });
+}
+
+// ========================================
+// EVENT LISTENERS - UTILITY CONTROLS
+// ========================================
+
+// Fullscreen
+if (DOM.fullscreenBtn) {
+    DOM.fullscreenBtn.addEventListener('click', () => {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(err => {
+                console.log('Fullscreen not supported:', err);
+            });
+        } else {
+            document.exitFullscreen();
+        }
+    });
+}
+
+// Audio toggle
+if (DOM.audioBtn) {
+    DOM.audioBtn.addEventListener('click', async () => {
+        const enabled = await audioManager.toggle();
+        console.log(`Audio ${enabled ? 'enabled' : 'disabled'}`);
+    });
+}
+
+// Share
+if (DOM.shareBtn) {
+    DOM.shareBtn.addEventListener('click', async () => {
+        const totalTime = AppState.stats.manic + AppState.stats.mixed + AppState.stats.depressive;
+        const manicPercent = totalTime > 0 ? ((AppState.stats.manic / totalTime) * 100).toFixed(1) : 0;
+        const mixedPercent = totalTime > 0 ? ((AppState.stats.mixed / totalTime) * 100).toFixed(1) : 0;
+        const depressivePercent = totalTime > 0 ? ((AppState.stats.depressive / totalTime) * 100).toFixed(1) : 0;
+        
+        const shareData = {
+            title: 'Dual Spectrum',
+            text: `An Interactive Expression of Bipolar I Disorder\n\nTime Spent:\nManic: ${formatTime(AppState.stats.manic)} (${manicPercent}%)\nMixed: ${formatTime(AppState.stats.mixed)} (${mixedPercent}%)\nDepressive: ${formatTime(AppState.stats.depressive)} (${depressivePercent}%)`,
+            url: window.location.href
+        };
+
+        if (navigator.share) {
+            try {
+                await navigator.share(shareData);
+            } catch (err) {
+                if (err.name !== 'AbortError') {
+                    console.log('Share cancelled or failed');
+                }
+            }
+        } else {
+            try {
+                await navigator.clipboard.writeText(window.location.href);
+                alert('Link copied to clipboard!');
+            } catch (err) {
+                console.log('Clipboard access denied');
+            }
+        }
+    });
+}
+
+// Timeline
+if (DOM.timelineBtn && DOM.timelinePanel) {
+    DOM.timelineBtn.addEventListener('click', () => {
+        const isHidden = DOM.timelinePanel.classList.toggle('hidden');
+        if (!isHidden && timelineChart) {
+            // Small delay to ensure canvas is rendered
+            setTimeout(() => {
+                timelineChart.draw(AppState.timelineData);
+            }, 100);
+        }
+    });
+}
+
+if (DOM.clearTimelineBtn) {
+    DOM.clearTimelineBtn.addEventListener('click', clearTimeline);
+}
+
+// ========================================
+// MOBILE TOUCH GESTURES
+// ========================================
 let touchStartX = 0;
 let touchStartY = 0;
-let touchEndX = 0;
-let touchEndY = 0;
+const states = ['depressive', 'mixed', 'manic'];
 
-const states = ['manic', 'mixed', 'depressive'];
+document.addEventListener('touchstart', (e) => {
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+}, { passive: true });
 
-function handleSwipe() {
+document.addEventListener('touchend', (e) => {
+    const touchEndX = e.changedTouches[0].clientX;
+    const touchEndY = e.changedTouches[0].clientY;
+    
     const deltaX = touchEndX - touchStartX;
     const deltaY = touchEndY - touchStartY;
     
     // Minimum swipe distance
     const minSwipeDistance = 50;
     
-    // Check if horizontal swipe is greater than vertical (horizontal swipe)
+    // Horizontal swipe
     if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > minSwipeDistance) {
-        const currentIndex = states.indexOf(currentState);
+        const currentIndex = states.indexOf(AppState.current);
         
         if (deltaX > 0) {
-            // Swipe right - go to previous state
+            // Swipe right - previous state
             const prevIndex = currentIndex === 0 ? states.length - 1 : currentIndex - 1;
             switchState(states[prevIndex]);
         } else {
-            // Swipe left - go to next state
+            // Swipe left - next state
             const nextIndex = (currentIndex + 1) % states.length;
             switchState(states[nextIndex]);
         }
     }
-}
-
-// Touch event listeners for swipe gestures
-app.addEventListener('touchstart', (e) => {
-    // Initialize audio on first touch
-    initAudioOnInteraction();
-    
-    touchStartX = e.changedTouches[0].screenX;
-    touchStartY = e.changedTouches[0].screenY;
 }, { passive: true });
 
-app.addEventListener('touchend', (e) => {
-    touchEndX = e.changedTouches[0].screenX;
-    touchEndY = e.changedTouches[0].screenY;
-    handleSwipe();
-}, { passive: true });
-
-// Prevent default touch behaviors that interfere
-app.addEventListener('touchmove', (e) => {
-    // Allow scrolling in panels, but prevent on main app
-    const isPanelOpen = !infoPanel.classList.contains('hidden') || 
-                        !timelinePanel.classList.contains('hidden') || 
-                        !sharePanel.classList.contains('hidden');
+// ========================================
+// INITIALIZATION
+// ========================================
+function initialize() {
+    console.log('Initializing Dual Spectrum...');
     
-    if (isPanelOpen) {
-        return; // Allow default scrolling in panels
-    }
+    // Start animation loop
+    animate();
     
-    // Prevent pull-to-refresh and other default behaviors on main app
-    e.preventDefault();
-}, { passive: false });
-
-// Handle image loading errors gracefully for all images
-Object.entries(stateImages).forEach(([value, img]) => {
-    if (img) {
-        img.addEventListener('error', function() {
-            console.error(`Image ${value} failed to load from:`, this.src);
-            this.style.opacity = '0';
-            this.style.visibility = 'hidden';
-        });
-        img.addEventListener('load', function() {
-            console.log(`Image ${value} loaded successfully, dimensions:`, this.naturalWidth, 'x', this.naturalHeight);
-            // Force visibility on load if it's the active image
-            if (this.classList.contains('active') || value === '0') {
-                this.style.opacity = '1';
-                this.style.visibility = 'visible';
-                this.style.transform = 'scale(1)';
-                this.style.zIndex = '25';
-            }
-        });
-    }
-});
-
-// Initialize on load
-window.addEventListener('load', () => {
-    createParticles();
-    updateStatsDisplay();
-    currentStateStartTime = Date.now();
-    
-    // Initialize images - start at appropriate value based on current state
-    currentImageValue = currentState === 'depressive' ? -3 : currentState === 'manic' ? 3 : 0;
-    hideAllImages();
-    showImage(currentImageValue);
-    
-    // Double-check image visibility after a short delay
-    setTimeout(() => {
-        const activeImage = stateImages[String(currentImageValue)];
-        if (activeImage) {
-            if (activeImage.complete && activeImage.naturalHeight !== 0) {
-                console.log('Active image loaded successfully:', activeImage.src);
-                activeImage.style.opacity = '1';
-                activeImage.style.visibility = 'visible';
-                activeImage.style.transform = 'scale(1)';
-                activeImage.style.zIndex = '25';
-                activeImage.classList.add('active');
-            } else {
-                console.warn('Active image may not be loaded properly:', activeImage.src);
-                // Try to reload
-                const src = activeImage.src;
-                activeImage.src = '';
-                setTimeout(() => {
-                    activeImage.src = src;
-                }, 100);
-            }
-        }
-    }, 500);
-    
-    // Try to play initial audio (will fail silently on mobile until user interaction)
-    depressiveAudio.volume = 0.2;
-    depressiveAudio.play().catch(() => {
-        // Audio will be enabled on first user interaction
-    });
+    // Start thought rotation
+    startThoughtRotation();
     
     // Add initial timeline point
-    addTimelinePoint('depressive');
+    addTimelinePoint(AppState.current);
     
-    // Resize timeline canvas
-    window.addEventListener('resize', () => {
-        if (!timelinePanel.classList.contains('hidden')) {
-            drawTimeline();
-        }
-    });
-    
-    // Handle safe area for mobile devices (notches)
-    const setSafeArea = () => {
-        const vh = window.innerHeight * 0.01;
-        document.documentElement.style.setProperty('--vh', `${vh}px`);
-    };
-    setSafeArea();
-    window.addEventListener('resize', setSafeArea);
-    window.addEventListener('orientationchange', setSafeArea);
-    
-    // Initialize audio context on any user interaction (for mobile)
-    const initOnAnyInteraction = () => {
-        initAudioOnInteraction();
-        // Also try to play background audio
-        if (depressiveAudio.paused) {
-            depressiveAudio.play().catch(() => {});
+    // Initialize audio on first user interaction
+    const initAudio = async () => {
+        if (!audioManager.initialized) {
+            await audioManager.initialize();
         }
     };
     
-    // Listen for various interaction events
-    document.addEventListener('touchstart', initOnAnyInteraction, { once: true, passive: true });
-    document.addEventListener('click', initOnAnyInteraction, { once: true });
-    document.addEventListener('touchend', initOnAnyInteraction, { once: true, passive: true });
+    document.addEventListener('click', initAudio, { once: true });
+    document.addEventListener('touchstart', initAudio, { once: true, passive: true });
+    
+    console.log('Dual Spectrum initialized successfully');
+}
+
+// Run initialization when DOM is ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initialize);
+} else {
+    initialize();
+}
+
+// ========================================
+// VISIBILITY CHANGE HANDLER
+// ========================================
+document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+        // Pause audio when tab is hidden
+        audioManager.stopAll();
+    } else {
+        // Resume audio when tab is visible
+        if (AppState.audioEnabled) {
+            audioManager.playStateAudio(AppState.current);
+        }
+    }
 });
 
+// ========================================
+// CLEANUP ON UNLOAD
+// ========================================
+window.addEventListener('beforeunload', () => {
+    audioManager.stopAll();
+    if (AppState.animationFrameId) {
+        cancelAnimationFrame(AppState.animationFrameId);
+    }
+});
