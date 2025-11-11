@@ -1084,6 +1084,7 @@ document.addEventListener('touchend', (e) => {
 // ========================================
 function initialize() {
     console.log('Initializing Dual Spectrum...');
+    console.log('DOM.stateImages:', DOM.stateImages);
     
     // Initialize images - set initial image based on current state
     let initialImageValue = 0;
@@ -1096,24 +1097,32 @@ function initialize() {
     currentImageValue = initialImageValue;
     
     // Hide all images first
-    Object.values(DOM.stateImages).forEach(img => {
+    Object.values(DOM.stateImages).forEach((img, index) => {
         if (img) {
+            console.log(`Hiding image ${index}:`, img.id, img.src);
             img.classList.remove('active');
             img.classList.add('hidden');
             img.style.display = 'none';
             img.style.opacity = '0';
+            img.style.visibility = 'hidden';
+        } else {
+            console.warn(`Image ${index} is null`);
         }
     });
     
     // Show initial image
     const initialImg = DOM.stateImages[String(initialImageValue)];
     if (initialImg) {
-        console.log('Showing initial image:', initialImageValue, initialImg);
+        console.log('Showing initial image:', initialImageValue, initialImg.id, initialImg.src);
         initialImg.classList.remove('hidden');
         initialImg.style.display = 'block';
+        initialImg.style.visibility = 'visible';
         initialImg.style.opacity = '1';
         initialImg.style.transform = 'translateX(0) scale(1)';
         initialImg.classList.add('active');
+        
+        // Force browser to show it
+        initialImg.offsetHeight; // Trigger reflow
         
         // Add a subtle entrance animation if GSAP is available
         if (typeof gsap !== 'undefined') {
@@ -1126,6 +1135,17 @@ function initialize() {
         }
     } else {
         console.error('Initial image not found:', initialImageValue, DOM.stateImages);
+        // Try to show first available image as fallback
+        const firstAvailable = Object.values(DOM.stateImages).find(img => img !== null);
+        if (firstAvailable) {
+            console.log('Showing fallback image:', firstAvailable.id);
+            firstAvailable.classList.remove('hidden');
+            firstAvailable.style.display = 'block';
+            firstAvailable.style.visibility = 'visible';
+            firstAvailable.style.opacity = '1';
+            firstAvailable.style.transform = 'translateX(0) scale(1)';
+            firstAvailable.classList.add('active');
+        }
     }
     
     // Start animation loop
@@ -1163,11 +1183,26 @@ function initialize() {
     console.log('Dual Spectrum initialized successfully');
 }
 
-// Run initialization when DOM is ready
+// Run initialization when DOM is ready and GSAP is loaded
+function waitForGSAPAndInit() {
+    if (typeof gsap !== 'undefined') {
+        console.log('GSAP loaded, initializing...');
+        initialize();
+    } else if (document.readyState === 'loading') {
+        // Wait for both DOM and GSAP
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(waitForGSAPAndInit, 100);
+        });
+    } else {
+        // DOM ready, wait for GSAP
+        setTimeout(waitForGSAPAndInit, 100);
+    }
+}
+
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initialize);
+    document.addEventListener('DOMContentLoaded', waitForGSAPAndInit);
 } else {
-    initialize();
+    waitForGSAPAndInit();
 }
 
 // ========================================
