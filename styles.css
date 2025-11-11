@@ -9,6 +9,12 @@
     box-sizing: border-box;
 }
 
+html {
+    zoom: 0.7; /* Default zoom to 70% */
+    -moz-transform: scale(0.7); /* Firefox fallback */
+    -moz-transform-origin: 0 0;
+}
+
 /* ========================================
    DESIGN TOKENS
    ======================================== */
@@ -686,8 +692,8 @@ main {
         0 0.1em 0.1em rgba(0, 0, 0, 0.2);
     cursor: pointer;
     position: relative;
-    width: 3.5em;
-    height: 2.25em;
+    width: 5.25em;
+    height: 3.375em;
     -webkit-appearance: none;
     appearance: none;
     -webkit-tap-highlight-color: transparent;
@@ -706,10 +712,10 @@ main {
     content: "";
     display: block;
     position: absolute;
-    top: 0.2em;
-    left: 0.2em;
-    width: 1.5em;
-    height: 1.125em;
+    top: 0.3em;
+    left: 0.3em;
+    width: 2.25em;
+    height: 1.6875em;
 }
 
 .state-toggle:checked {
@@ -781,8 +787,8 @@ main {
             0 0.375em 0 rgba(0, 0, 0, 0.15) inset,
             0 0.375em 0 var(--on) inset,
             0 0.475em 0.1em rgba(0, 0, 0, 0.2) inset;
-        left: 1.8em;
-        width: 1.5em;
+        left: 2.7em;
+        width: 2.25em;
     }
     50% {
         box-shadow:
@@ -790,8 +796,8 @@ main {
             0 0.375em 0 rgba(0, 0, 0, 0.15) inset,
             0 0.375em 0 var(--mid) inset,
             0 0.475em 0.1em rgba(0, 0, 0, 0.2) inset;
-        left: 0.2em;
-        width: 3.1em;
+        left: 0.3em;
+        width: 4.65em;
     }
     to {
         box-shadow:
@@ -799,8 +805,8 @@ main {
             0 0.375em 0 rgba(0, 0, 0, 0.15) inset,
             0 0.375em 0 var(--off) inset,
             0 0.475em 0.1em rgba(0, 0, 0, 0.2) inset;
-        left: 0.2em;
-        width: 1.5em;
+        left: 0.3em;
+        width: 2.25em;
     }
 }
 
@@ -811,8 +817,8 @@ main {
             0 0.375em 0 rgba(0, 0, 0, 0.15) inset,
             0 0.375em 0 var(--off) inset,
             0 0.475em 0.1em rgba(0, 0, 0, 0.2) inset;
-        left: 0.2em;
-        width: 1.5em;
+        left: 0.3em;
+        width: 2.25em;
     }
     50% {
         box-shadow:
@@ -820,8 +826,8 @@ main {
             0 0.375em 0 rgba(0, 0, 0, 0.15) inset,
             0 0.375em 0 var(--mid) inset,
             0 0.475em 0.1em rgba(0, 0, 0, 0.2) inset;
-        left: 0.2em;
-        width: 3.1em;
+        left: 0.3em;
+        width: 4.65em;
     }
     to {
         box-shadow:
@@ -829,8 +835,8 @@ main {
             0 0.375em 0 rgba(0, 0, 0, 0.15) inset,
             0 0.375em 0 var(--on) inset,
             0 0.475em 0.1em rgba(0, 0, 0, 0.2) inset;
-        left: 1.8em;
-        width: 1.5em;
+        left: 2.7em;
+        width: 2.25em;
     }
 }
 
