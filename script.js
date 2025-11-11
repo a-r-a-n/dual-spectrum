@@ -541,30 +541,50 @@ function hideAllImages() {
         if (img) {
             img.classList.remove('active');
             img.classList.add('hidden');
+            // Use GSAP to ensure proper hiding
+            gsap.set(img, {
+                opacity: 0,
+                display: 'none'
+            });
         }
     });
 }
 
-// Show a specific image by value with horizontal scroll transition
+// Show a specific image by value with GSAP horizontal scroll transition
 function showImage(value, direction = 'right') {
     const img = DOM.stateImages[String(value)];
-    if (img) {
-        // Remove all transition classes
-        img.classList.remove('hidden', 'active', 'slide-in-left', 'slide-in-right', 'slide-out-left', 'slide-out-right');
-        
-        // Set initial state
-        img.style.opacity = '0';
-        img.style.transform = direction === 'right' 
-            ? 'translateX(150%) scale(0.7) rotate(10deg)'
-            : 'translateX(-150%) scale(0.7) rotate(-10deg)';
-        
-        // Add slide-in animation class
-        requestAnimationFrame(() => {
-            img.classList.remove('hidden');
-            img.classList.add('active', direction === 'right' ? 'slide-in-right' : 'slide-in-left');
+    if (!img) return;
+    
+    // Remove all transition classes
+    img.classList.remove('hidden', 'active', 'slide-in-left', 'slide-in-right', 'slide-out-left', 'slide-out-right');
+    img.classList.remove('hidden');
+    
+    // Set initial state based on direction
+    const startX = direction === 'right' ? 150 : -150;
+    const startRotate = direction === 'right' ? 10 : -10;
+    
+    // Use GSAP for smooth animation
+    gsap.set(img, {
+        opacity: 0,
+        x: `${startX}%`,
+        scale: 0.7,
+        rotation: startRotate,
+        display: 'block'
+    });
+    
+    // Animate in with GSAP
+    gsap.to(img, {
+        opacity: 1,
+        x: '0%',
+        scale: 1,
+        rotation: 0,
+        duration: 0.8,
+        ease: 'back.out(1.7)',
+        onComplete: () => {
+            img.classList.add('active');
             currentImageValue = value;
-        });
-    }
+        }
+    });
 }
 
 // Progressive image transition - smoothly transitions through images
@@ -611,27 +631,42 @@ function transitionToImage(targetValue) {
                 const nextImg = DOM.stateImages[String(nextValue)];
                 
                 if (prevImg && nextImg) {
-                    // Horizontal scrolling transition
+                    // Horizontal scrolling transition with GSAP
                     const slideDirection = nextValue > prevValue ? 'right' : 'left';
+                    const exitX = slideDirection === 'right' ? -150 : 150;
+                    const exitRotate = slideDirection === 'right' ? -10 : 10;
                     
                     // Create ripple effect on container
                     const container = prevImg.closest('.image-container');
                     if (container) {
-                        container.style.animation = 'none';
-                        setTimeout(() => {
-                            container.style.animation = 'rippleEffect 0.5s ease-out';
-                        }, 10);
+                        gsap.to(container, {
+                            scale: 1.05,
+                            duration: 0.3,
+                            yoyo: true,
+                            repeat: 1,
+                            ease: 'power2.out'
+                        });
                     }
                     
-                    // Slide out previous image
-                    prevImg.classList.remove('active', 'slide-in-left', 'slide-in-right');
-                    prevImg.classList.add(slideDirection === 'right' ? 'slide-out-left' : 'slide-out-right');
+                    // Slide out previous image with GSAP
+                    gsap.to(prevImg, {
+                        opacity: 0,
+                        x: `${exitX}%`,
+                        scale: 0.7,
+                        rotation: exitRotate,
+                        duration: 0.5,
+                        ease: 'power2.in',
+                        onComplete: () => {
+                            prevImg.classList.remove('active');
+                            prevImg.classList.add('hidden');
+                        }
+                    });
                     
-                    // Slide in next image after a short delay
+                    // Slide in next image with GSAP (start slightly before previous finishes)
                     setTimeout(() => {
                         hideAllImages();
                         showImage(nextValue, slideDirection);
-                    }, 300); // Start next image while previous is sliding out
+                    }, 200);
                 } else {
                     hideAllImages();
                     showImage(nextValue, nextValue > current ? 'right' : 'left');
@@ -1013,37 +1048,37 @@ document.addEventListener('touchend', (e) => {
 function initialize() {
     console.log('Initializing Dual Spectrum...');
     
-    // Initialize images - set initial image based on current state
+    // Initialize images - set initial image based on current state using GSAP
+    let initialImageValue = 0;
     if (AppState.current === 'depressive') {
-        currentImageValue = -3;
-        hideAllImages();
-        const img = DOM.stateImages['-3'];
-        if (img) {
-            img.classList.remove('hidden');
-            img.classList.add('active');
-            img.style.opacity = '1';
-            img.style.transform = 'translateX(0) scale(1)';
-        }
+        initialImageValue = -3;
     } else if (AppState.current === 'manic') {
-        currentImageValue = 3;
-        hideAllImages();
-        const img = DOM.stateImages['3'];
-        if (img) {
-            img.classList.remove('hidden');
-            img.classList.add('active');
-            img.style.opacity = '1';
-            img.style.transform = 'translateX(0) scale(1)';
-        }
-    } else {
-        currentImageValue = 0;
-        hideAllImages();
-        const img = DOM.stateImages['0'];
-        if (img) {
-            img.classList.remove('hidden');
-            img.classList.add('active');
-            img.style.opacity = '1';
-            img.style.transform = 'translateX(0) scale(1)';
-        }
+        initialImageValue = 3;
+    }
+    
+    currentImageValue = initialImageValue;
+    hideAllImages();
+    
+    const initialImg = DOM.stateImages[String(initialImageValue)];
+    if (initialImg) {
+        // Show initial image immediately with GSAP
+        initialImg.classList.remove('hidden');
+        gsap.set(initialImg, {
+            opacity: 1,
+            x: '0%',
+            scale: 1,
+            rotation: 0,
+            display: 'block'
+        });
+        initialImg.classList.add('active');
+        
+        // Add a subtle entrance animation
+        gsap.from(initialImg, {
+            opacity: 0,
+            scale: 0.8,
+            duration: 0.6,
+            ease: 'back.out(1.7)'
+        });
     }
     
     // Start animation loop
