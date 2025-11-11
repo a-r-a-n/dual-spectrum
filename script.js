@@ -536,23 +536,27 @@ function playTransitionSound() {
 let currentImageValue = 0; // Track current image value (0 = neutral)
 let imageTransitionTimeout = null;
 
-// Hide all images
+// Hide all images with scale down
 function hideAllImages() {
     Object.values(DOM.stateImages).forEach(img => {
         if (img) {
-            img.classList.remove('active', 'transitioning');
-            img.classList.add('hidden');
+            // Scale down and fade out
+            img.style.transition = 'transform 0.3s ease-out, opacity 0.3s ease-out';
+            img.style.transform = 'scale(0.1)';
             img.style.opacity = '0';
-            img.style.display = 'none';
-            // Clear GSAP transforms if used
-            if (typeof gsap !== 'undefined') {
-                gsap.set(img, { clearProps: 'all' });
-            }
+            
+            // Remove classes after transition
+            setTimeout(() => {
+                img.classList.remove('active', 'transitioning');
+                img.classList.add('hidden');
+                img.style.display = 'none';
+                img.style.visibility = 'hidden';
+            }, 300);
         }
     });
 }
 
-// Show a specific image by value with basic transition and pixelated effect
+// Show a specific image by value with scale transition
 function showImage(value, isTransitioning = false) {
     const img = DOM.stateImages[String(value)];
     if (!img) {
@@ -563,39 +567,31 @@ function showImage(value, isTransitioning = false) {
     // Remove all classes
     img.classList.remove('hidden', 'active', 'transitioning', 'slide-in-left', 'slide-in-right', 'slide-out-left', 'slide-out-right');
     
-    // Clear any inline styles from GSAP
-    if (typeof gsap !== 'undefined') {
-        gsap.set(img, { clearProps: 'all' });
-    }
-    
-    // Basic CSS transition
+    // Clear any inline styles
     img.style.display = 'block';
+    img.style.visibility = 'visible';
+    
+    // Start from small scale (like the text animation)
+    img.style.transform = 'scale(0.1)';
     img.style.opacity = '0';
-    img.style.transform = '';
-    img.style.filter = '';
     
-    // Add pixelated effect if transitioning through intermediate images
-    if (isTransitioning) {
-        img.classList.add('transitioning');
-    }
+    // Set transition timing (adjustable - similar to text animation)
+    const scaleDuration = isTransitioning ? '0.4s' : '0.6s';
+    const opacityDuration = isTransitioning ? '0.3s' : '0.4s';
     
+    // Trigger scale-up animation (like text going from 10px to 300px)
     requestAnimationFrame(() => {
-        img.style.transition = 'opacity 0.4s ease-in-out';
-        img.style.opacity = '1';
-        img.classList.add('active');
-        currentImageValue = value;
-        
-        // Remove pixelated effect after transition
-        if (isTransitioning) {
-            setTimeout(() => {
-                img.classList.remove('transitioning');
-                img.style.filter = '';
-            }, 400);
-        }
+        requestAnimationFrame(() => {
+            img.style.transition = `transform ${scaleDuration} ease-in, opacity ${opacityDuration} ease-in`;
+            img.style.transform = 'scale(1)';
+            img.style.opacity = '1';
+            img.classList.add('active');
+            currentImageValue = value;
+        });
     });
 }
 
-// Progressive image transition with pixelated effect
+// Progressive image transition with scale effect
 function transitionToImage(targetValue) {
     // Clear any existing transition
     if (imageTransitionTimeout) {
@@ -617,8 +613,8 @@ function transitionToImage(targetValue) {
     const direction = target > current ? 1 : -1;
     const steps = Math.abs(target - current);
     
-    // Delay between each step for pixelated transition effect
-    const baseDelay = 200; // 200ms between each image
+    // Delay between each step (adjustable timing)
+    const baseDelay = 300; // 300ms between each image (can be adjusted)
     
     // Start from current position
     let stepIndex = 0;
@@ -628,31 +624,37 @@ function transitionToImage(targetValue) {
             const nextValue = current + (direction * stepIndex);
             
             if (stepIndex === 0) {
-                // First step - just show current
-                hideAllImages();
-                showImage(nextValue, false);
-            } else {
-                // Subsequent steps - pixelated crossfade
-                const prevValue = current + (direction * (stepIndex - 1));
-                const prevImg = DOM.stateImages[String(prevValue)];
-                const nextImg = DOM.stateImages[String(nextValue)];
+                // First step - scale down current image
+                const currentImg = DOM.stateImages[String(current)];
+                if (currentImg) {
+                    currentImg.style.transition = 'transform 0.3s ease-out, opacity 0.3s ease-out';
+                    currentImg.style.transform = 'scale(0.1)';
+                    currentImg.style.opacity = '0';
+                }
                 
-                if (prevImg && nextImg) {
-                    // Fade out previous
-                    prevImg.style.transition = 'opacity 0.3s ease-in-out';
-                    prevImg.style.opacity = '0';
-                    
-                    // Fade in next with pixelated effect (only for intermediate steps)
-                    setTimeout(() => {
-                        hideAllImages();
-                        // Add pixelated effect for intermediate images (not the final target)
-                        const isIntermediate = stepIndex < steps;
-                        showImage(nextValue, isIntermediate);
-                    }, 150);
-                } else {
+                // Then show next image
+                setTimeout(() => {
                     hideAllImages();
                     showImage(nextValue, stepIndex < steps);
+                }, 150);
+            } else {
+                // Subsequent steps - scale down previous, scale up next
+                const prevValue = current + (direction * (stepIndex - 1));
+                const prevImg = DOM.stateImages[String(prevValue)];
+                
+                if (prevImg) {
+                    // Scale down previous image
+                    prevImg.style.transition = 'transform 0.3s ease-out, opacity 0.3s ease-out';
+                    prevImg.style.transform = 'scale(0.1)';
+                    prevImg.style.opacity = '0';
                 }
+                
+                // Scale up next image (intermediate or final)
+                setTimeout(() => {
+                    hideAllImages();
+                    const isIntermediate = stepIndex < steps;
+                    showImage(nextValue, isIntermediate);
+                }, 150);
             }
             
             if (stepIndex < steps) {
@@ -660,13 +662,8 @@ function transitionToImage(targetValue) {
                 stepIndex++;
                 imageTransitionTimeout = setTimeout(nextStep, baseDelay);
             } else {
-                // Transition complete - remove pixelated effect
+                // Transition complete
                 imageTransitionTimeout = null;
-                const finalImg = DOM.stateImages[String(target)];
-                if (finalImg) {
-                    finalImg.classList.remove('transitioning');
-                    finalImg.style.filter = '';
-                }
             }
         }
     }
