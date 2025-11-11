@@ -545,22 +545,23 @@ function hideAllImages() {
     });
 }
 
-// Show a specific image by value with cool transition effect
-function showImage(value) {
+// Show a specific image by value with horizontal scroll transition
+function showImage(value, direction = 'right') {
     const img = DOM.stateImages[String(value)];
     if (img) {
-        img.classList.remove('hidden');
-        img.style.opacity = '0';
-        img.style.transform = 'scale(0.8) rotate(-5deg)';
-        img.style.filter = 'blur(10px)';
+        // Remove all transition classes
+        img.classList.remove('hidden', 'active', 'slide-in-left', 'slide-in-right', 'slide-out-left', 'slide-out-right');
         
-        // Cool transition: zoom + rotate + blur effect
+        // Set initial state
+        img.style.opacity = '0';
+        img.style.transform = direction === 'right' 
+            ? 'translateX(150%) scale(0.7) rotate(10deg)'
+            : 'translateX(-150%) scale(0.7) rotate(-10deg)';
+        
+        // Add slide-in animation class
         requestAnimationFrame(() => {
-            img.classList.add('active');
-            img.style.transition = 'opacity 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.6s ease-out';
-            img.style.opacity = '1';
-            img.style.transform = 'scale(1) rotate(0deg)';
-            img.style.filter = 'blur(0px)';
+            img.classList.remove('hidden');
+            img.classList.add('active', direction === 'right' ? 'slide-in-right' : 'slide-in-left');
             currentImageValue = value;
         });
     }
@@ -610,8 +611,8 @@ function transitionToImage(targetValue) {
                 const nextImg = DOM.stateImages[String(nextValue)];
                 
                 if (prevImg && nextImg) {
-                    // Cool transition: ripple + zoom + rotation effect
-                    const slideDirection = nextValue > prevValue ? 1 : -1;
+                    // Horizontal scrolling transition
+                    const slideDirection = nextValue > prevValue ? 'right' : 'left';
                     
                     // Create ripple effect on container
                     const container = prevImg.closest('.image-container');
@@ -622,43 +623,18 @@ function transitionToImage(targetValue) {
                         }, 10);
                     }
                     
-                    // Fade out previous with cool exit animation
-                    prevImg.style.transition = 'opacity 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.4s ease-out';
-                    prevImg.style.opacity = '0';
-                    prevImg.style.transform = `scale(0.7) rotate(${slideDirection * 15}deg) translateX(${slideDirection * -40}px)`;
-                    prevImg.style.filter = 'blur(8px)';
+                    // Slide out previous image
+                    prevImg.classList.remove('active', 'slide-in-left', 'slide-in-right');
+                    prevImg.classList.add(slideDirection === 'right' ? 'slide-out-left' : 'slide-out-right');
                     
-                    // Fade in next with cool entrance animation
+                    // Slide in next image after a short delay
                     setTimeout(() => {
                         hideAllImages();
-                        const nextImgElement = DOM.stateImages[String(nextValue)];
-                        if (nextImgElement) {
-                            nextImgElement.style.transition = 'opacity 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.5s ease-out';
-                            nextImgElement.style.transform = `scale(0.7) rotate(${slideDirection * -15}deg) translateX(${slideDirection * 40}px)`;
-                            nextImgElement.style.opacity = '0';
-                            nextImgElement.style.filter = 'blur(8px)';
-                            nextImgElement.classList.remove('hidden');
-                            nextImgElement.classList.add('active');
-                            
-                            // Animate in with bounce effect
-                            requestAnimationFrame(() => {
-                                nextImgElement.style.opacity = '1';
-                                nextImgElement.style.transform = 'scale(1.1) rotate(0deg) translateX(0)';
-                                nextImgElement.style.filter = 'blur(0px)';
-                                
-                                // Bounce back to normal size
-                                setTimeout(() => {
-                                    nextImgElement.style.transition = 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)';
-                                    nextImgElement.style.transform = 'scale(1) rotate(0deg) translateX(0)';
-                                }, 100);
-                                
-                                currentImageValue = nextValue;
-                            });
-                        }
-                    }, 200);
+                        showImage(nextValue, slideDirection);
+                    }, 300); // Start next image while previous is sliding out
                 } else {
                     hideAllImages();
-                    showImage(nextValue);
+                    showImage(nextValue, nextValue > current ? 'right' : 'left');
                 }
             }
             
@@ -1041,15 +1017,33 @@ function initialize() {
     if (AppState.current === 'depressive') {
         currentImageValue = -3;
         hideAllImages();
-        showImage(-3);
+        const img = DOM.stateImages['-3'];
+        if (img) {
+            img.classList.remove('hidden');
+            img.classList.add('active');
+            img.style.opacity = '1';
+            img.style.transform = 'translateX(0) scale(1)';
+        }
     } else if (AppState.current === 'manic') {
         currentImageValue = 3;
         hideAllImages();
-        showImage(3);
+        const img = DOM.stateImages['3'];
+        if (img) {
+            img.classList.remove('hidden');
+            img.classList.add('active');
+            img.style.opacity = '1';
+            img.style.transform = 'translateX(0) scale(1)';
+        }
     } else {
         currentImageValue = 0;
         hideAllImages();
-        showImage(0);
+        const img = DOM.stateImages['0'];
+        if (img) {
+            img.classList.remove('hidden');
+            img.classList.add('active');
+            img.style.opacity = '1';
+            img.style.transform = 'translateX(0) scale(1)';
+        }
     }
     
     // Start animation loop
