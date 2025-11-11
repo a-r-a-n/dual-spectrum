@@ -375,6 +375,8 @@ function updateStateImages(state) {
                 positiveImage.style.display = 'block';
                 positiveImage.style.visibility = 'visible';
                 positiveImage.style.opacity = '1';
+                positiveImage.style.transform = 'translate(-50%, -50%) scale(1)';
+                positiveImage.style.zIndex = '20';
                 console.log('Showing positive image (3.jpg)');
                 // Force reflow for animation
                 void positiveImage.offsetWidth;
@@ -386,6 +388,8 @@ function updateStateImages(state) {
                 neutralImage.style.display = 'block';
                 neutralImage.style.visibility = 'visible';
                 neutralImage.style.opacity = '1';
+                neutralImage.style.transform = 'translate(-50%, -50%) scale(1)';
+                neutralImage.style.zIndex = '20';
                 console.log('Showing neutral image (0.jpg)');
                 // Force reflow for animation
                 void neutralImage.offsetWidth;
@@ -397,6 +401,8 @@ function updateStateImages(state) {
                 depressiveImage.style.display = 'block';
                 depressiveImage.style.visibility = 'visible';
                 depressiveImage.style.opacity = '1';
+                depressiveImage.style.transform = 'translate(-50%, -50%) scale(1)';
+                depressiveImage.style.zIndex = '20';
                 console.log('Showing depressive image (-3.png)');
                 // Force reflow for animation
                 void depressiveImage.offsetWidth;
@@ -960,7 +966,8 @@ if (depressiveImage) {
             this.style.display = 'block';
             this.style.visibility = 'visible';
             this.style.opacity = '1';
-            this.style.transform = 'scale(1) translateY(0)';
+            this.style.transform = 'translate(-50%, -50%) scale(1)';
+            this.style.zIndex = '20';
         }
     });
 }
@@ -980,7 +987,8 @@ window.addEventListener('load', () => {
         depressiveImage.style.display = 'block';
         depressiveImage.style.visibility = 'visible';
         depressiveImage.style.opacity = '1';
-        depressiveImage.style.transform = 'scale(1) translateY(0)';
+        depressiveImage.style.transform = 'translate(-50%, -50%) scale(1)';
+        depressiveImage.style.zIndex = '20';
         console.log('Forcing depressive image to be visible on initial load');
     }
     
@@ -995,7 +1003,8 @@ window.addEventListener('load', () => {
                 activeImage.style.display = 'block';
                 activeImage.style.visibility = 'visible';
                 activeImage.style.opacity = '1';
-                activeImage.style.transform = 'scale(1) translateY(0)';
+                activeImage.style.transform = 'translate(-50%, -50%) scale(1)';
+                activeImage.style.zIndex = '20';
                 activeImage.classList.remove('hidden');
             } else {
                 console.warn('Active image may not be loaded properly:', activeImage.src);
