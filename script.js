@@ -539,80 +539,62 @@ let imageTransitionTimeout = null;
 function hideAllImages() {
     Object.values(DOM.stateImages).forEach(img => {
         if (img) {
-            img.classList.remove('active');
+            img.classList.remove('active', 'transitioning');
             img.classList.add('hidden');
-            // Use GSAP if available, otherwise use CSS
+            img.style.opacity = '0';
+            img.style.display = 'none';
+            // Clear GSAP transforms if used
             if (typeof gsap !== 'undefined') {
-                gsap.set(img, {
-                    opacity: 0,
-                    x: '-150%',
-                    scale: 0.7
-                });
-            } else {
-                img.style.opacity = '0';
-                img.style.transform = 'translateX(-150%) scale(0.7)';
+                gsap.set(img, { clearProps: 'all' });
             }
         }
     });
 }
 
-// Show a specific image by value with GSAP horizontal scroll transition
-function showImage(value, direction = 'right') {
+// Show a specific image by value with basic transition and pixelated effect
+function showImage(value, isTransitioning = false) {
     const img = DOM.stateImages[String(value)];
     if (!img) {
         console.error('Image not found for value:', value);
         return;
     }
     
-    // Remove all transition classes
-    img.classList.remove('hidden', 'active', 'slide-in-left', 'slide-in-right', 'slide-out-left', 'slide-out-right');
+    // Remove all classes
+    img.classList.remove('hidden', 'active', 'transitioning', 'slide-in-left', 'slide-in-right', 'slide-out-left', 'slide-out-right');
     
-    // Set initial state based on direction
-    const startX = direction === 'right' ? 150 : -150;
-    const startRotate = direction === 'right' ? 10 : -10;
-    
-    // Use GSAP if available, otherwise use CSS transitions
+    // Clear any inline styles from GSAP
     if (typeof gsap !== 'undefined') {
-        // Use GSAP for smooth animation
-        gsap.set(img, {
-            opacity: 0,
-            x: `${startX}%`,
-            scale: 0.7,
-            rotation: startRotate,
-            display: 'block',
-            clearProps: 'all'
-        });
-        
-        // Animate in with GSAP
-        gsap.to(img, {
-            opacity: 1,
-            x: '0%',
-            scale: 1,
-            rotation: 0,
-            duration: 0.8,
-            ease: 'back.out(1.7)',
-            onComplete: () => {
-                img.classList.add('active');
-                currentImageValue = value;
-            }
-        });
-    } else {
-        // Fallback to CSS transitions
-        img.style.display = 'block';
-        img.style.opacity = '0';
-        img.style.transform = `translateX(${startX}%) scale(0.7) rotate(${startRotate}deg)`;
-        
-        requestAnimationFrame(() => {
-            img.style.transition = 'opacity 0.8s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)';
-            img.style.opacity = '1';
-            img.style.transform = 'translateX(0) scale(1) rotate(0deg)';
-            img.classList.add('active');
-            currentImageValue = value;
-        });
+        gsap.set(img, { clearProps: 'all' });
     }
+    
+    // Basic CSS transition
+    img.style.display = 'block';
+    img.style.opacity = '0';
+    img.style.transform = '';
+    img.style.filter = '';
+    
+    // Add pixelated effect if transitioning through intermediate images
+    if (isTransitioning) {
+        img.classList.add('transitioning');
+    }
+    
+    requestAnimationFrame(() => {
+        img.style.transition = 'opacity 0.4s ease-in-out';
+        img.style.opacity = '1';
+        img.classList.add('active');
+        currentImageValue = value;
+        
+        // Remove pixelated effect after transition
+        if (isTransitioning) {
+            setTimeout(() => {
+                img.classList.remove('transitioning');
+                img.style.filter = '';
+            }, 400);
+        }
+    });
 }
 
-// Progressive image transition - smoothly transitions through images
+// Progressive image transition with pixelated effect
 function transitionToImage(targetValue) {
     // Clear any existing transition
     if (imageTransitionTimeout) {
@@ -626,7 +608,7 @@ function transitionToImage(targetValue) {
     // If already at target, just show it
     if (current === target) {
         hideAllImages();
-        showImage(target);
+        showImage(target, false);
         return;
     }
     
@@ -634,8 +616,8 @@ function transitionToImage(targetValue) {
     const direction = target > current ? 1 : -1;
     const steps = Math.abs(target - current);
     
-    // Calculate transition duration - faster transitions
-    const baseDelay = 250; // 250ms between each image for faster, fluid transitions
+    // Delay between each step for pixelated transition effect
+    const baseDelay = 200; // 200ms between each image
     
     // Start from current position
     let stepIndex = 0;
@@ -644,69 +626,31 @@ function transitionToImage(targetValue) {
         if (stepIndex <= steps) {
             const nextValue = current + (direction * stepIndex);
             
-            // Smooth crossfade - fade out current, fade in next
             if (stepIndex === 0) {
                 // First step - just show current
                 hideAllImages();
-                showImage(nextValue);
+                showImage(nextValue, false);
             } else {
-                // Subsequent steps - crossfade
+                // Subsequent steps - pixelated crossfade
                 const prevValue = current + (direction * (stepIndex - 1));
                 const prevImg = DOM.stateImages[String(prevValue)];
                 const nextImg = DOM.stateImages[String(nextValue)];
                 
                 if (prevImg && nextImg) {
-                    // Horizontal scrolling transition
-                    const slideDirection = nextValue > prevValue ? 'right' : 'left';
-                    const exitX = slideDirection === 'right' ? -150 : 150;
-                    const exitRotate = slideDirection === 'right' ? -10 : 10;
+                    // Fade out previous
+                    prevImg.style.transition = 'opacity 0.3s ease-in-out';
+                    prevImg.style.opacity = '0';
                     
-                    // Create ripple effect on container
-                    const container = prevImg.closest('.image-container');
-                    if (container && typeof gsap !== 'undefined') {
-                        gsap.to(container, {
-                            scale: 1.05,
-                            duration: 0.3,
-                            yoyo: true,
-                            repeat: 1,
-                            ease: 'power2.out'
-                        });
-                    }
-                    
-                    // Slide out previous image
-                    if (typeof gsap !== 'undefined') {
-                        gsap.to(prevImg, {
-                            opacity: 0,
-                            x: `${exitX}%`,
-                            scale: 0.7,
-                            rotation: exitRotate,
-                            duration: 0.5,
-                            ease: 'power2.in',
-                            onComplete: () => {
-                                prevImg.classList.remove('active');
-                                prevImg.classList.add('hidden');
-                                prevImg.style.display = 'none';
-                            }
-                        });
-                    } else {
-                        prevImg.style.transition = 'opacity 0.5s, transform 0.5s';
-                        prevImg.style.opacity = '0';
-                        prevImg.style.transform = `translateX(${exitX}%) scale(0.7) rotate(${exitRotate}deg)`;
-                        setTimeout(() => {
-                            prevImg.classList.remove('active');
-                            prevImg.classList.add('hidden');
-                            prevImg.style.display = 'none';
-                        }, 500);
-                    }
-                    
-                    // Slide in next image (start slightly before previous finishes)
+                    // Fade in next with pixelated effect (only for intermediate steps)
                     setTimeout(() => {
                         hideAllImages();
-                        showImage(nextValue, slideDirection);
-                    }, 200);
+                        // Add pixelated effect for intermediate images (not the final target)
+                        const isIntermediate = stepIndex < steps;
+                        showImage(nextValue, isIntermediate);
+                    }, 150);
                 } else {
                     hideAllImages();
-                    showImage(nextValue, nextValue > current ? 'right' : 'left');
+                    showImage(nextValue, stepIndex < steps);
                 }
             }
             
@@ -715,8 +659,13 @@ function transitionToImage(targetValue) {
                 stepIndex++;
                 imageTransitionTimeout = setTimeout(nextStep, baseDelay);
             } else {
-                // Transition complete
+                // Transition complete - remove pixelated effect
                 imageTransitionTimeout = null;
+                const finalImg = DOM.stateImages[String(target)];
+                if (finalImg) {
+                    finalImg.classList.remove('transitioning');
+                    finalImg.style.filter = '';
+                }
             }
         }
     }
