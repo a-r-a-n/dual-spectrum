@@ -131,10 +131,10 @@ body {
     height: 100%;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
+    justify-content: flex-start;
     align-items: center;
-    padding: 2rem 1.5rem;
-    max-width: 1200px;
+    padding: 1rem 1.5rem;
+    max-width: 1000px;
     margin: 0 auto;
     overflow-y: auto;
     overflow-x: hidden;
@@ -144,14 +144,14 @@ body {
 header {
     width: 100%;
     text-align: center;
-    margin-bottom: 1rem;
+    margin-bottom: 0.5rem;
     flex-shrink: 0;
 }
 
 .artwork-title {
-    font-size: 2.2rem;
+    font-size: 1.8rem;
     font-weight: 700;
-    margin-bottom: 0.4rem;
+    margin-bottom: 0.25rem;
     text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.4);
     transition: all var(--transition-medium);
     letter-spacing: -0.02em;
@@ -184,8 +184,8 @@ header {
 .artwork-author,
 .artwork-institution,
 .artwork-medium {
-    font-size: 0.85rem;
-    margin: 0.15rem 0;
+    font-size: 0.75rem;
+    margin: 0.1rem 0;
     opacity: 0.8;
     transition: opacity var(--transition-medium);
     font-weight: 400;
@@ -193,12 +193,12 @@ header {
 
 .artwork-institution {
     font-style: italic;
-    font-size: 0.8rem;
+    font-size: 0.7rem;
     opacity: 0.75;
 }
 
 .artwork-medium {
-    font-size: 0.75rem;
+    font-size: 0.65rem;
     opacity: 0.7;
 }
 
@@ -207,22 +207,22 @@ main {
     flex: 1;
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: flex-start;
     align-items: center;
-    gap: 2rem;
+    gap: 1rem;
     width: 100%;
-    padding: 1rem 0;
+    padding: 0.5rem 0;
     min-height: 0;
 }
 
 /* State indicator */
 .state-indicator {
-    font-size: 1.5rem;
+    font-size: 1.2rem;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.15em;
     transition: all var(--transition-medium);
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.25rem;
 }
 
 .state-depressive .state-indicator {
@@ -257,9 +257,9 @@ main {
 /* Visual elements - Centered and prominent */
 .visual-elements {
     position: relative;
-    width: 400px;
-    height: 400px;
-    margin: 1rem 0;
+    width: 320px;
+    height: 320px;
+    margin: 0.5rem 0;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -282,24 +282,24 @@ main {
 
 .state-image {
     position: absolute;
-    max-width: 320px;
-    max-height: 320px;
-    width: auto;
-    height: auto;
+    width: 280px;
+    height: 280px;
+    max-width: 280px;
+    max-height: 280px;
     object-fit: contain;
-    border-radius: 20px;
+    border-radius: 16px;
     pointer-events: none;
     filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.5));
     z-index: 25;
     background: rgba(255, 255, 255, 0.05);
     backdrop-filter: blur(20px);
-    padding: 10px;
+    padding: 8px;
     border: 2px solid rgba(255, 255, 255, 0.2);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3),
                 inset 0 1px 0 rgba(255, 255, 255, 0.1);
     opacity: 0;
-    transform: scale(0.8);
-    transition: opacity 0.5s ease-out, transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: scale(1);
+    transition: opacity 0.4s ease-out, transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     visibility: hidden;
     display: block;
 }
@@ -312,13 +312,12 @@ main {
 }
 
 @keyframes imagePopIn {
-    0% { opacity: 0; transform: scale(0.8); }
-    60% { transform: scale(1.05); }
+    0% { opacity: 0; transform: scale(0.95); }
     100% { opacity: 1; transform: scale(1); }
 }
 
 .state-image.active {
-    animation: imagePopIn 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: imagePopIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Breathing circle - Behind images */
@@ -508,9 +507,9 @@ main {
 
 /* Thoughts container */
 .thoughts-container {
-    min-height: 60px;
-    padding: 1rem 1.5rem;
-    margin: 0.5rem 0;
+    min-height: 50px;
+    padding: 0.75rem 1.25rem;
+    margin: 0.25rem 0;
     border-radius: 12px;
     backdrop-filter: blur(10px);
     background: rgba(255, 255, 255, 0.05);
@@ -557,20 +556,20 @@ main {
 /* State toggle buttons - Clean and modern */
 .state-toggle {
     display: flex;
-    gap: 1rem;
+    gap: 0.75rem;
     flex-wrap: wrap;
     justify-content: center;
     width: 100%;
-    max-width: 600px;
-    margin: 0.5rem 0;
+    max-width: 500px;
+    margin: 0.25rem 0;
 }
 
 .state-btn {
-    padding: 0.9rem 2rem;
-    font-size: 0.95rem;
+    padding: 0.7rem 1.5rem;
+    font-size: 0.85rem;
     font-weight: 600;
     border: 2px solid;
-    border-radius: 10px;
+    border-radius: 8px;
     cursor: pointer;
     transition: all var(--transition-fast);
     text-transform: uppercase;
@@ -684,16 +683,16 @@ main {
 /* Statistics panel - Compact */
 .statistics-panel {
     display: flex;
-    gap: 1.5rem;
+    gap: 1rem;
     justify-content: center;
     flex-wrap: wrap;
-    padding: 0.75rem 1.5rem;
-    border-radius: 12px;
+    padding: 0.5rem 1rem;
+    border-radius: 10px;
     backdrop-filter: blur(10px);
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    margin: 0.5rem 0;
-    max-width: 600px;
+    margin: 0.25rem 0;
+    max-width: 500px;
     width: 100%;
 }
 
@@ -719,11 +718,11 @@ main {
 /* Controls - Compact floating */
 .controls {
     display: flex;
-    gap: 0.75rem;
+    gap: 0.5rem;
     justify-content: center;
     align-items: center;
     flex-wrap: wrap;
-    margin: 0.5rem 0;
+    margin: 0.25rem 0;
 }
 
 .control-btn {
@@ -793,17 +792,17 @@ main {
 
 /* Footer */
 footer {
-    margin-top: 1rem;
+    margin-top: 0.5rem;
     width: 100%;
-    padding-top: 0.5rem;
+    padding-top: 0.25rem;
     flex-shrink: 0;
 }
 
 .citation {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     opacity: 0.7;
     font-style: italic;
-    line-height: 1.5;
+    line-height: 1.4;
     max-width: 800px;
     margin: 0 auto;
 }
