@@ -404,7 +404,7 @@ main {
 .image-wrapper {
     position: relative;
     width: 100%;
-    max-width: 400px;
+    max-width: 600px;
     aspect-ratio: 1;
     display: flex;
     align-items: center;
@@ -415,7 +415,7 @@ main {
 
 @media (min-width: 769px) {
     .image-wrapper {
-        max-width: 320px;
+        max-width: 500px;
     }
 }
 
