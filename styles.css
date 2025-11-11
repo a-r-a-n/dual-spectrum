@@ -371,38 +371,41 @@ main {
     transform-origin: center center;
     image-rendering: auto;
     opacity: 0;
-    transform: scale(0.1);
-    transition: transform 0.6s ease-out,
-                opacity 0.4s ease-out;
-    will-change: transform, opacity;
+    transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: opacity;
+    pointer-events: none;
 }
 
 .state-image.hidden {
     opacity: 0 !important;
-    pointer-events: none;
     z-index: 1;
-    transform: scale(0.1);
     display: block !important;
     visibility: hidden !important;
 }
 
 .state-image.active {
     opacity: 1 !important;
-    z-index: 2;
+    z-index: 3;
     display: block !important;
     visibility: visible !important;
-    transform: scale(1);
-    transition: transform 0.6s ease-in,
-                opacity 0.4s ease-in;
+    pointer-events: auto;
     animation: floatImage 6s ease-in-out infinite;
 }
 
-/* Transitioning state - scale up effect */
-.state-image.transitioning {
-    transform: scale(0.1);
+/* Fading in state */
+.state-image.fading-in {
     opacity: 0;
-    transition: transform 0.3s ease-out,
-                opacity 0.3s ease-out;
+    z-index: 2;
+    display: block !important;
+    visibility: visible !important;
+    transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Fading out state */
+.state-image.fading-out {
+    opacity: 0;
+    z-index: 1;
+    transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Scale transition animations - similar to text animation effect */

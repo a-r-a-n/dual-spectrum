@@ -536,62 +536,74 @@ function playTransitionSound() {
 let currentImageValue = 0; // Track current image value (0 = neutral)
 let imageTransitionTimeout = null;
 
-// Hide all images with scale down
-function hideAllImages() {
-    Object.values(DOM.stateImages).forEach(img => {
-        if (img) {
-            // Scale down and fade out
-            img.style.transition = 'transform 0.3s ease-out, opacity 0.3s ease-out';
-            img.style.transform = 'scale(0.1)';
-            img.style.opacity = '0';
-            
-            // Remove classes after transition
-            setTimeout(() => {
-                img.classList.remove('active', 'transitioning');
-                img.classList.add('hidden');
-                img.style.display = 'none';
-                img.style.visibility = 'hidden';
-            }, 300);
+// Smooth crossfade transition between images
+function crossfadeToImage(targetValue) {
+    // Clear any existing transition
+    if (imageTransitionTimeout) {
+        clearTimeout(imageTransitionTimeout);
+        imageTransitionTimeout = null;
+    }
+    
+    const current = currentImageValue;
+    const target = targetValue;
+    
+    // If already at target, ensure it's visible
+    if (current === target) {
+        const targetImg = DOM.stateImages[String(target)];
+        if (targetImg) {
+            targetImg.classList.remove('hidden', 'fading-in', 'fading-out');
+            targetImg.classList.add('active');
+            targetImg.style.opacity = '1';
         }
-    });
-}
-
-// Show a specific image by value with scale transition
-function showImage(value, isTransitioning = false) {
-    const img = DOM.stateImages[String(value)];
-    if (!img) {
-        console.error('Image not found for value:', value);
         return;
     }
     
-    // Remove all classes
-    img.classList.remove('hidden', 'active', 'transitioning', 'slide-in-left', 'slide-in-right', 'slide-out-left', 'slide-out-right');
+    const currentImg = DOM.stateImages[String(current)];
+    const targetImg = DOM.stateImages[String(target)];
     
-    // Clear any inline styles
-    img.style.display = 'block';
-    img.style.visibility = 'visible';
+    if (!targetImg) {
+        console.error('Target image not found:', target);
+        return;
+    }
     
-    // Start from small scale (like the text animation)
-    img.style.transform = 'scale(0.1)';
-    img.style.opacity = '0';
+    // Prepare target image for fade in
+    targetImg.classList.remove('hidden', 'active', 'fading-out');
+    targetImg.classList.add('fading-in');
+    targetImg.style.display = 'block';
+    targetImg.style.visibility = 'visible';
+    targetImg.style.opacity = '0';
     
-    // Set transition timing (adjustable - similar to text animation)
-    const scaleDuration = isTransitioning ? '0.4s' : '0.6s';
-    const opacityDuration = isTransitioning ? '0.3s' : '0.4s';
-    
-    // Trigger scale-up animation (like text going from 10px to 300px)
+    // Fade in the new image
     requestAnimationFrame(() => {
         requestAnimationFrame(() => {
-            img.style.transition = `transform ${scaleDuration} ease-in, opacity ${opacityDuration} ease-in`;
-            img.style.transform = 'scale(1)';
-            img.style.opacity = '1';
-            img.classList.add('active');
-            currentImageValue = value;
+            targetImg.style.opacity = '1';
+            
+            // Once new image is visible, fade out old one
+            setTimeout(() => {
+                if (currentImg && currentImg !== targetImg) {
+                    currentImg.classList.remove('active');
+                    currentImg.classList.add('fading-out');
+                    currentImg.style.opacity = '0';
+                    
+                    // Hide old image after fade out
+                    setTimeout(() => {
+                        currentImg.classList.remove('fading-out');
+                        currentImg.classList.add('hidden');
+                        currentImg.style.display = 'none';
+                        currentImg.style.visibility = 'hidden';
+                    }, 600);
+                }
+                
+                // Mark new image as active
+                targetImg.classList.remove('fading-in');
+                targetImg.classList.add('active');
+                currentImageValue = target;
+            }, 400);
         });
     });
 }
 
-// Progressive image transition with scale effect
+// Progressive image transition with smooth crossfades
 function transitionToImage(targetValue) {
     // Clear any existing transition
     if (imageTransitionTimeout) {
@@ -602,10 +614,9 @@ function transitionToImage(targetValue) {
     const current = currentImageValue;
     const target = targetValue;
     
-    // If already at target, just show it
+    // If already at target, just ensure it's visible
     if (current === target) {
-        hideAllImages();
-        showImage(target, false);
+        crossfadeToImage(target);
         return;
     }
     
@@ -613,8 +624,8 @@ function transitionToImage(targetValue) {
     const direction = target > current ? 1 : -1;
     const steps = Math.abs(target - current);
     
-    // Delay between each step (adjustable timing)
-    const baseDelay = 300; // 300ms between each image (can be adjusted)
+    // Delay between each step for smooth progressive transition
+    const baseDelay = 400; // 400ms between each image
     
     // Start from current position
     let stepIndex = 0;
@@ -623,38 +634,48 @@ function transitionToImage(targetValue) {
         if (stepIndex <= steps) {
             const nextValue = current + (direction * stepIndex);
             
-            if (stepIndex === 0) {
-                // First step - scale down current image
-                const currentImg = DOM.stateImages[String(current)];
-                if (currentImg) {
-                    currentImg.style.transition = 'transform 0.3s ease-out, opacity 0.3s ease-out';
-                    currentImg.style.transform = 'scale(0.1)';
-                    currentImg.style.opacity = '0';
-                }
+            // Crossfade to next image
+            const prevValue = stepIndex === 0 ? current : current + (direction * (stepIndex - 1));
+            const prevImg = DOM.stateImages[String(prevValue)];
+            const nextImg = DOM.stateImages[String(nextValue)];
+            
+            if (nextImg) {
+                // Prepare next image
+                nextImg.classList.remove('hidden', 'active', 'fading-out');
+                nextImg.classList.add('fading-in');
+                nextImg.style.display = 'block';
+                nextImg.style.visibility = 'visible';
+                nextImg.style.opacity = '0';
                 
-                // Then show next image
-                setTimeout(() => {
-                    hideAllImages();
-                    showImage(nextValue, stepIndex < steps);
-                }, 150);
-            } else {
-                // Subsequent steps - scale down previous, scale up next
-                const prevValue = current + (direction * (stepIndex - 1));
-                const prevImg = DOM.stateImages[String(prevValue)];
-                
-                if (prevImg) {
-                    // Scale down previous image
-                    prevImg.style.transition = 'transform 0.3s ease-out, opacity 0.3s ease-out';
-                    prevImg.style.transform = 'scale(0.1)';
-                    prevImg.style.opacity = '0';
-                }
-                
-                // Scale up next image (intermediate or final)
-                setTimeout(() => {
-                    hideAllImages();
-                    const isIntermediate = stepIndex < steps;
-                    showImage(nextValue, isIntermediate);
-                }, 150);
+                // Fade in next image
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                        nextImg.style.opacity = '1';
+                        
+                        // Fade out previous image after a short delay
+                        if (prevImg && prevImg !== nextImg && stepIndex > 0) {
+                            setTimeout(() => {
+                                prevImg.classList.remove('active');
+                                prevImg.classList.add('fading-out');
+                                prevImg.style.opacity = '0';
+                                
+                                setTimeout(() => {
+                                    prevImg.classList.remove('fading-out');
+                                    prevImg.classList.add('hidden');
+                                    prevImg.style.display = 'none';
+                                    prevImg.style.visibility = 'hidden';
+                                }, 600);
+                            }, 200);
+                        }
+                        
+                        // Update active state
+                        setTimeout(() => {
+                            nextImg.classList.remove('fading-in');
+                            nextImg.classList.add('active');
+                            currentImageValue = nextValue;
+                        }, 400);
+                    });
+                });
             }
             
             if (stepIndex < steps) {
