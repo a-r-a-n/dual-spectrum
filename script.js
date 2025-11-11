@@ -347,25 +347,43 @@ function switchState(newState) {
 // Update state images based on current state
 function updateStateImages(state) {
     // Hide all images first
-    if (neutralImage) neutralImage.classList.add('hidden');
-    if (positiveImage) positiveImage.classList.add('hidden');
-    if (depressiveImage) depressiveImage.classList.add('hidden');
+    if (neutralImage) {
+        neutralImage.classList.add('hidden');
+        neutralImage.style.display = 'none';
+    }
+    if (positiveImage) {
+        positiveImage.classList.add('hidden');
+        positiveImage.style.display = 'none';
+    }
+    if (depressiveImage) {
+        depressiveImage.classList.add('hidden');
+        depressiveImage.style.display = 'none';
+    }
     
     // Show appropriate image based on state
     if (state === 'manic') {
         // Show positive image (3)
         if (positiveImage) {
             positiveImage.classList.remove('hidden');
+            positiveImage.style.display = 'block';
+            // Force reflow for animation
+            void positiveImage.offsetWidth;
         }
     } else if (state === 'mixed') {
         // Show neutral image (0)
         if (neutralImage) {
             neutralImage.classList.remove('hidden');
+            neutralImage.style.display = 'block';
+            // Force reflow for animation
+            void neutralImage.offsetWidth;
         }
     } else if (state === 'depressive') {
         // Show depressive image (-3)
         if (depressiveImage) {
             depressiveImage.classList.remove('hidden');
+            depressiveImage.style.display = 'block';
+            // Force reflow for animation
+            void depressiveImage.offsetWidth;
         }
     }
 }
@@ -897,20 +915,29 @@ app.addEventListener('touchmove', (e) => {
 // Handle image loading errors gracefully
 if (neutralImage) {
     neutralImage.addEventListener('error', function() {
+        console.error('Neutral image (0.jpg) failed to load');
         this.style.display = 'none';
-        console.log('Neutral image not found');
+    });
+    neutralImage.addEventListener('load', function() {
+        console.log('Neutral image (0.jpg) loaded successfully');
     });
 }
 if (positiveImage) {
     positiveImage.addEventListener('error', function() {
+        console.error('Positive image (3.jpg) failed to load');
         this.style.display = 'none';
-        console.log('Positive image not found');
+    });
+    positiveImage.addEventListener('load', function() {
+        console.log('Positive image (3.jpg) loaded successfully');
     });
 }
 if (depressiveImage) {
     depressiveImage.addEventListener('error', function() {
+        console.error('Depressive image (-3.png) failed to load');
         this.style.display = 'none';
-        console.log('Depressive image not found');
+    });
+    depressiveImage.addEventListener('load', function() {
+        console.log('Depressive image (-3.png) loaded successfully');
     });
 }
 

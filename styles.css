@@ -504,14 +504,14 @@ main {
 }
 
 .state-image:not(.hidden) {
-    opacity: 1;
-    transform: scale(1) translateY(0);
+    opacity: 1 !important;
+    transform: scale(1) translateY(0) !important;
     animation: imagePopIn 0.8s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .state-image.hidden {
-    opacity: 0;
-    transform: scale(0.7) translateY(20px);
+    opacity: 0 !important;
+    transform: scale(0.7) translateY(20px) !important;
     pointer-events: none;
 }
 
