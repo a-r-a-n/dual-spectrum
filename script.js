@@ -479,13 +479,21 @@ function hideAllImages() {
     });
 }
 
-// Show a specific image by value
+// Show a specific image by value with fluid animation
 function showImage(value) {
     const img = DOM.stateImages[String(value)];
     if (img) {
+        img.style.transition = 'opacity 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
         img.classList.remove('hidden');
-        img.classList.add('active');
-        currentImageValue = value;
+        img.style.opacity = '0';
+        img.style.transform = 'scale(0.95) translateX(20px)';
+        
+        requestAnimationFrame(() => {
+            img.classList.add('active');
+            img.style.opacity = '1';
+            img.style.transform = 'scale(1) translateX(0)';
+            currentImageValue = value;
+        });
     }
 }
 
@@ -511,8 +519,8 @@ function transitionToImage(targetValue) {
     const direction = target > current ? 1 : -1;
     const steps = Math.abs(target - current);
     
-    // Calculate transition duration - longer for more steps
-    const baseDelay = 600; // 600ms between each image for smooth transitions
+    // Calculate transition duration - faster transitions
+    const baseDelay = 250; // 250ms between each image for faster, fluid transitions
     
     // Start from current position
     let stepIndex = 0;
@@ -533,15 +541,33 @@ function transitionToImage(targetValue) {
                 const nextImg = DOM.stateImages[String(nextValue)];
                 
                 if (prevImg && nextImg) {
-                    // Fade out previous
-                    prevImg.style.transition = 'opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
-                    prevImg.style.opacity = '0';
+                    // Fluid watery transition - side to side movement
+                    const slideDirection = nextValue > prevValue ? 1 : -1;
                     
-                    // Fade in next
+                    // Fade out previous with side movement
+                    prevImg.style.transition = 'opacity 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                    prevImg.style.opacity = '0';
+                    prevImg.style.transform = `scale(0.95) translateX(${slideDirection * -30}px)`;
+                    
+                    // Fade in next from opposite side
                     setTimeout(() => {
                         hideAllImages();
-                        showImage(nextValue);
-                    }, 300); // Halfway through fade out
+                        const nextImgElement = DOM.stateImages[String(nextValue)];
+                        if (nextImgElement) {
+                            nextImgElement.style.transition = 'opacity 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                            nextImgElement.style.transform = `scale(0.95) translateX(${slideDirection * 30}px)`;
+                            nextImgElement.style.opacity = '0';
+                            nextImgElement.classList.remove('hidden');
+                            nextImgElement.classList.add('active');
+                            
+                            // Animate in
+                            requestAnimationFrame(() => {
+                                nextImgElement.style.opacity = '1';
+                                nextImgElement.style.transform = 'scale(1) translateX(0)';
+                                currentImageValue = nextValue;
+                            });
+                        }
+                    }, 150); // Faster crossfade
                 } else {
                     hideAllImages();
                     showImage(nextValue);
@@ -926,15 +952,25 @@ function initialize() {
     // Add initial timeline point
     addTimelinePoint(AppState.current);
     
-    // Initialize audio on first user interaction
+    // Initialize audio on first user interaction and auto-enable
     const initAudio = async () => {
         if (!audioManager.initialized) {
             await audioManager.initialize();
         }
+        // Auto-enable audio after initialization
+        if (!AppState.audioEnabled) {
+            AppState.audioEnabled = true;
+            await audioManager.playStateAudio(AppState.current);
+            if (DOM.audioBtn) {
+                DOM.audioBtn.classList.add('audio-active');
+            }
+        }
     };
     
+    // Initialize audio on any user interaction
     document.addEventListener('click', initAudio, { once: true });
     document.addEventListener('touchstart', initAudio, { once: true, passive: true });
+    document.addEventListener('keydown', initAudio, { once: true });
     
     console.log('Dual Spectrum initialized successfully');
 }
