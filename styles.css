@@ -456,17 +456,19 @@ main {
 }
 
 .state-image.hidden {
-    opacity: 0;
-    transform: translateX(-150%) scale(0.7);
+    opacity: 0 !important;
+    transform: translateX(-150%) scale(0.7) !important;
     pointer-events: none;
     z-index: 1;
+    display: none !important;
 }
 
 .state-image.active {
-    opacity: 1;
-    transform: translateX(0) scale(1);
+    opacity: 1 !important;
+    transform: translateX(0) scale(1) !important;
     z-index: 2;
     display: block !important;
+    visibility: visible !important;
     animation: floatImage 6s ease-in-out infinite;
 }
 
