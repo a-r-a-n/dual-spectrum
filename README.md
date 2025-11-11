@@ -2,7 +2,7 @@
 
 **Professional Interactive Expression of Bipolar I Disorder**
 
-A sophisticated digital artwork by Destiny A., Christian H., Thomas M., Aran S. (2025) - Northwest Vista
+A sophisticated digital artwork by Aran S.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
