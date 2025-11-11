@@ -382,10 +382,11 @@ function showImage(value) {
 }
 
 // Progressive image transition - smoothly transitions through images
-function transitionToImage(targetValue, state) {
+function transitionToImage(targetValue) {
     // Clear any existing transition
     if (imageTransitionTimeout) {
         clearTimeout(imageTransitionTimeout);
+        imageTransitionTimeout = null;
     }
     
     const current = currentImageValue;
@@ -414,7 +415,7 @@ function transitionToImage(targetValue, state) {
             if (stepIndex < steps) {
                 // Continue to next step
                 stepIndex++;
-                imageTransitionTimeout = setTimeout(nextStep, 400); // 400ms between each image
+                imageTransitionTimeout = setTimeout(nextStep, 350); // 350ms between each image
             } else {
                 // Transition complete
                 imageTransitionTimeout = null;
@@ -422,23 +423,27 @@ function transitionToImage(targetValue, state) {
         }
     }
     
-    // Start transition
+    // Start transition immediately
     nextStep();
 }
 
 // Update state images based on current state with progressive transitions
 function updateStateImages(state) {
-    console.log('Updating state images for:', state);
+    // Clear any pending transitions first
+    if (imageTransitionTimeout) {
+        clearTimeout(imageTransitionTimeout);
+        imageTransitionTimeout = null;
+    }
     
     if (state === 'manic') {
-        // Progressive transition: 0 → 1 → 2 → 3
-        transitionToImage(3, state);
+        // Progressive transition from current to 3
+        transitionToImage(3);
     } else if (state === 'mixed') {
-        // Stay at neutral (0)
-        transitionToImage(0, state);
+        // Transition to neutral (0)
+        transitionToImage(0);
     } else if (state === 'depressive') {
-        // Progressive transition: 0 → -1 → -2 → -3
-        transitionToImage(-3, state);
+        // Progressive transition from current to -3
+        transitionToImage(-3);
     }
 }
 
@@ -994,19 +999,9 @@ window.addEventListener('load', () => {
     currentStateStartTime = Date.now();
     
     // Initialize images - start at appropriate value based on current state
-    if (currentState === 'depressive') {
-        currentImageValue = -3;
-        hideAllImages();
-        showImage(-3);
-    } else if (currentState === 'manic') {
-        currentImageValue = 3;
-        hideAllImages();
-        showImage(3);
-    } else {
-        currentImageValue = 0;
-        hideAllImages();
-        showImage(0);
-    }
+    currentImageValue = currentState === 'depressive' ? -3 : currentState === 'manic' ? 3 : 0;
+    hideAllImages();
+    showImage(currentImageValue);
     
     // Double-check image visibility after a short delay
     setTimeout(() => {
