@@ -156,24 +156,27 @@ body {
     height: 100%;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
-    padding: 2rem 1.5rem;
+    padding: 1rem 1.5rem;
     text-align: center;
     max-width: 1400px;
     margin: 0 auto;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 /* Header */
 header {
-    margin-top: 1.5rem;
+    margin-bottom: 1rem;
     width: 100%;
+    flex-shrink: 0;
 }
 
 .artwork-title {
-    font-size: 3.5rem;
+    font-size: 2.5rem;
     font-weight: 700;
-    margin-bottom: 0.75rem;
+    margin-bottom: 0.5rem;
     text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.4);
     transition: all var(--transition-medium);
     letter-spacing: -0.02em;
@@ -247,10 +250,11 @@ main {
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    gap: 2.5rem;
+    gap: 1.5rem;
     width: 100%;
     max-width: 900px;
     padding: 0 1rem;
+    min-height: 0;
 }
 
 .state-indicator {
@@ -458,12 +462,13 @@ main {
 /* Visual elements */
 .visual-elements {
     position: relative;
-    width: 400px;
-    height: 400px;
-    margin: 2rem 0;
+    width: 350px;
+    height: 350px;
+    margin: 1rem 0;
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
 }
 
 /* State Images */
@@ -525,10 +530,8 @@ main {
     display: block !important;
 }
 
-/* Ensure images are visible when not hidden - override default opacity */
-#neutral-image:not(.hidden),
-#positive-image:not(.hidden),
-#depressive-image:not(.hidden) {
+/* Ensure images are visible when active */
+.state-image.active {
     opacity: 1 !important;
     transform: scale(1) !important;
     visibility: visible !important;
@@ -1411,9 +1414,11 @@ main {
 
 /* Footer */
 footer {
-    margin-bottom: 1.5rem;
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
     width: 100%;
-    padding-top: 1rem;
+    padding-top: 0.5rem;
+    flex-shrink: 0;
 }
 
 .citation {
@@ -1472,7 +1477,7 @@ footer {
     .visual-elements {
         width: 280px;
         height: 280px;
-        margin: 1.5rem 0;
+        margin: 0.5rem 0;
     }
     
     .state-image {
@@ -1710,8 +1715,14 @@ footer {
     }
     
     .visual-elements {
-        width: 150px;
-        height: 150px;
+        width: 220px;
+        height: 220px;
+        margin: 0.5rem 0;
+    }
+    
+    .state-image {
+        max-width: 180px;
+        max-height: 180px;
     }
     
     .thoughts-container {

@@ -105,11 +105,14 @@
 
                 <!-- Visual elements that change with state -->
                 <div class="visual-elements">
-                    <!-- Emotional State Images -->
+                    <!-- Emotional State Images - All 7 images for smooth transitions -->
                     <div class="state-images">
-                        <img id="neutral-image" src="images/0.jpg" alt="Neutral state (0)" class="state-image neutral-image hidden" loading="eager">
-                        <img id="positive-image" src="images/3.jpg" alt="Positive/Manic state (3)" class="state-image positive-image hidden" loading="eager">
-                        <img id="depressive-image" src="images/-3.png" alt="Depressive state (-3)" class="state-image depressive-image" loading="eager" style="opacity: 1; visibility: visible; transform: scale(1); z-index: 25;">
+                        <img id="image-neg2" src="images/-2.png" alt="State -2" class="state-image" data-value="-2" loading="eager">
+                        <img id="image-neg1" src="images/-1.png" alt="State -1" class="state-image" data-value="-1" loading="eager">
+                        <img id="image-neg3" src="images/-3.png" alt="State -3" class="state-image active" data-value="-3" loading="eager" style="opacity: 1; visibility: visible; transform: scale(1); z-index: 25;">
+                        <img id="image-1" src="images/1.jpg" alt="State 1" class="state-image" data-value="1" loading="eager">
+                        <img id="image-2" src="images/2.jpg" alt="State 2" class="state-image" data-value="2" loading="eager">
+                        <img id="image-3" src="images/3.jpg" alt="State 3" class="state-image" data-value="3" loading="eager">
                     </div>
                     <!-- Breathing Visualization -->
                     <div class="breathing-circle">

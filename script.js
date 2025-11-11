@@ -82,9 +82,20 @@ const copyLinkBtn = document.getElementById('copy-link-btn');
 const downloadImageBtn = document.getElementById('download-image-btn');
 const copyTextBtn = document.getElementById('copy-text-btn');
 const shareTextarea = document.getElementById('share-textarea');
-const neutralImage = document.getElementById('neutral-image');
-const positiveImage = document.getElementById('positive-image');
-const depressiveImage = document.getElementById('depressive-image');
+// Get all state images
+const stateImages = {
+    '-3': document.getElementById('image-neg3'),
+    '-2': document.getElementById('image-neg2'),
+    '-1': document.getElementById('image-neg1'),
+    '0': document.getElementById('image-0'),
+    '1': document.getElementById('image-1'),
+    '2': document.getElementById('image-2'),
+    '3': document.getElementById('image-3')
+};
+
+// Current image value (0 = neutral)
+let currentImageValue = 0;
+let imageTransitionTimeout = null;
 
 // Sound effects using Web Audio API
 let audioContext = null;
@@ -344,64 +355,90 @@ function switchState(newState) {
     app.style.transition = 'all 0.6s ease-in-out';
 }
 
-// Update state images based on current state
+// Hide all images
+function hideAllImages() {
+    Object.values(stateImages).forEach(img => {
+        if (img) {
+            img.classList.remove('active');
+            img.style.opacity = '0';
+            img.style.visibility = 'hidden';
+            img.style.transform = 'scale(0.7)';
+        }
+    });
+}
+
+// Show a specific image by value
+function showImage(value) {
+    const img = stateImages[String(value)];
+    if (img) {
+        img.classList.add('active');
+        img.style.opacity = '1';
+        img.style.visibility = 'visible';
+        img.style.transform = 'scale(1)';
+        img.style.zIndex = '25';
+        currentImageValue = value;
+        console.log(`Showing image value: ${value}`);
+    }
+}
+
+// Progressive image transition - smoothly transitions through images
+function transitionToImage(targetValue, state) {
+    // Clear any existing transition
+    if (imageTransitionTimeout) {
+        clearTimeout(imageTransitionTimeout);
+    }
+    
+    const current = currentImageValue;
+    const target = targetValue;
+    
+    // If already at target, just show it
+    if (current === target) {
+        hideAllImages();
+        showImage(target);
+        return;
+    }
+    
+    // Determine direction and steps
+    const direction = target > current ? 1 : -1;
+    const steps = Math.abs(target - current);
+    
+    // Start from current position
+    let stepIndex = 0;
+    
+    function nextStep() {
+        if (stepIndex <= steps) {
+            const nextValue = current + (direction * stepIndex);
+            hideAllImages();
+            showImage(nextValue);
+            
+            if (stepIndex < steps) {
+                // Continue to next step
+                stepIndex++;
+                imageTransitionTimeout = setTimeout(nextStep, 400); // 400ms between each image
+            } else {
+                // Transition complete
+                imageTransitionTimeout = null;
+            }
+        }
+    }
+    
+    // Start transition
+    nextStep();
+}
+
+// Update state images based on current state with progressive transitions
 function updateStateImages(state) {
     console.log('Updating state images for:', state);
     
-    // Hide all images first - use opacity/visibility, NOT display: none
-    if (neutralImage) {
-        neutralImage.classList.add('hidden');
-        neutralImage.style.opacity = '0';
-        neutralImage.style.visibility = 'hidden';
-    }
-    if (positiveImage) {
-        positiveImage.classList.add('hidden');
-        positiveImage.style.opacity = '0';
-        positiveImage.style.visibility = 'hidden';
-    }
-    if (depressiveImage) {
-        depressiveImage.classList.add('hidden');
-        depressiveImage.style.opacity = '0';
-        depressiveImage.style.visibility = 'hidden';
-    }
-    
-    // Show appropriate image based on state - no delay needed
     if (state === 'manic') {
-        // Show positive image (3)
-        if (positiveImage) {
-            positiveImage.classList.remove('hidden');
-            positiveImage.style.opacity = '1';
-            positiveImage.style.visibility = 'visible';
-            positiveImage.style.transform = 'scale(1)';
-            positiveImage.style.zIndex = '25';
-            console.log('Showing positive image (3.jpg)');
-            // Force reflow for animation
-            void positiveImage.offsetWidth;
-        }
+        // Progressive transition: 0 → 1 → 2 → 3
+        transitionToImage(3, state);
     } else if (state === 'mixed') {
-        // Show neutral image (0)
-        if (neutralImage) {
-            neutralImage.classList.remove('hidden');
-            neutralImage.style.opacity = '1';
-            neutralImage.style.visibility = 'visible';
-            neutralImage.style.transform = 'scale(1)';
-            neutralImage.style.zIndex = '25';
-            console.log('Showing neutral image (0.jpg)');
-            // Force reflow for animation
-            void neutralImage.offsetWidth;
-        }
+        // Stay at neutral (0)
+        transitionToImage(0, state);
     } else if (state === 'depressive') {
-        // Show depressive image (-3)
-        if (depressiveImage) {
-            depressiveImage.classList.remove('hidden');
-            depressiveImage.style.opacity = '1';
-            depressiveImage.style.visibility = 'visible';
-            depressiveImage.style.transform = 'scale(1)';
-            depressiveImage.style.zIndex = '25';
-            console.log('Showing depressive image (-3.png)');
-            // Force reflow for animation
-            void depressiveImage.offsetWidth;
-        }
+        // Progressive transition: 0 → -1 → -2 → -3
+        transitionToImage(-3, state);
     }
 }
 
@@ -929,44 +966,26 @@ app.addEventListener('touchmove', (e) => {
     e.preventDefault();
 }, { passive: false });
 
-// Handle image loading errors gracefully
-if (neutralImage) {
-    neutralImage.addEventListener('error', function() {
-        console.error('Neutral image (0.jpg) failed to load');
-        this.style.opacity = '0';
-        this.style.visibility = 'hidden';
-    });
-    neutralImage.addEventListener('load', function() {
-        console.log('Neutral image (0.jpg) loaded successfully');
-    });
-}
-if (positiveImage) {
-    positiveImage.addEventListener('error', function() {
-        console.error('Positive image (3.jpg) failed to load');
-        this.style.opacity = '0';
-        this.style.visibility = 'hidden';
-    });
-    positiveImage.addEventListener('load', function() {
-        console.log('Positive image (3.jpg) loaded successfully');
-    });
-}
-if (depressiveImage) {
-    depressiveImage.addEventListener('error', function() {
-        console.error('Depressive image (-3.png) failed to load from:', this.src);
-        this.style.opacity = '0';
-        this.style.visibility = 'hidden';
-    });
-    depressiveImage.addEventListener('load', function() {
-        console.log('Depressive image (-3.png) loaded successfully, dimensions:', this.naturalWidth, 'x', this.naturalHeight);
-        // Force visibility on load
-        if (!this.classList.contains('hidden')) {
-            this.style.opacity = '1';
-            this.style.visibility = 'visible';
-            this.style.transform = 'scale(1)';
-            this.style.zIndex = '25';
-        }
-    });
-}
+// Handle image loading errors gracefully for all images
+Object.entries(stateImages).forEach(([value, img]) => {
+    if (img) {
+        img.addEventListener('error', function() {
+            console.error(`Image ${value} failed to load from:`, this.src);
+            this.style.opacity = '0';
+            this.style.visibility = 'hidden';
+        });
+        img.addEventListener('load', function() {
+            console.log(`Image ${value} loaded successfully, dimensions:`, this.naturalWidth, 'x', this.naturalHeight);
+            // Force visibility on load if it's the active image
+            if (this.classList.contains('active') || value === '0') {
+                this.style.opacity = '1';
+                this.style.visibility = 'visible';
+                this.style.transform = 'scale(1)';
+                this.style.zIndex = '25';
+            }
+        });
+    }
+});
 
 // Initialize on load
 window.addEventListener('load', () => {
@@ -974,24 +993,24 @@ window.addEventListener('load', () => {
     updateStatsDisplay();
     currentStateStartTime = Date.now();
     
-    // Initialize state images - ensure they're visible
-    updateStateImages(currentState);
-    
-    // Force show initial image immediately (for depressive state on load)
-    if (currentState === 'depressive' && depressiveImage) {
-        depressiveImage.classList.remove('hidden');
-        depressiveImage.style.opacity = '1';
-        depressiveImage.style.visibility = 'visible';
-        depressiveImage.style.transform = 'scale(1)';
-        depressiveImage.style.zIndex = '25';
-        console.log('Forcing depressive image to be visible on initial load');
+    // Initialize images - start at appropriate value based on current state
+    if (currentState === 'depressive') {
+        currentImageValue = -3;
+        hideAllImages();
+        showImage(-3);
+    } else if (currentState === 'manic') {
+        currentImageValue = 3;
+        hideAllImages();
+        showImage(3);
+    } else {
+        currentImageValue = 0;
+        hideAllImages();
+        showImage(0);
     }
     
     // Double-check image visibility after a short delay
     setTimeout(() => {
-        const activeImage = currentState === 'manic' ? positiveImage : 
-                           currentState === 'mixed' ? neutralImage : 
-                           depressiveImage;
+        const activeImage = stateImages[String(currentImageValue)];
         if (activeImage) {
             if (activeImage.complete && activeImage.naturalHeight !== 0) {
                 console.log('Active image loaded successfully:', activeImage.src);
@@ -999,7 +1018,7 @@ window.addEventListener('load', () => {
                 activeImage.style.visibility = 'visible';
                 activeImage.style.transform = 'scale(1)';
                 activeImage.style.zIndex = '25';
-                activeImage.classList.remove('hidden');
+                activeImage.classList.add('active');
             } else {
                 console.warn('Active image may not be loaded properly:', activeImage.src);
                 // Try to reload
@@ -1010,7 +1029,7 @@ window.addEventListener('load', () => {
                 }, 100);
             }
         }
-    }, 200);
+    }, 500);
     
     // Try to play initial audio (will fail silently on mobile until user interaction)
     depressiveAudio.volume = 0.2;
