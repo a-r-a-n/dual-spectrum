@@ -1190,6 +1190,203 @@ document.addEventListener('visibilitychange', () => {
 });
 
 // ========================================
+// CHATBOT FUNCTIONALITY
+// ========================================
+const Chatbot = {
+    knowledgeBase: {
+        // Bipolar Disorder Information
+        'what is bipolar': {
+            response: 'Bipolar I Disorder is a mental health condition characterized by extreme mood swings that include emotional highs (mania or hypomania) and lows (depression). These mood episodes can last for days, weeks, or even months, significantly impacting daily life, relationships, and work performance.',
+            keywords: ['bipolar', 'what is', 'disorder', 'condition']
+        },
+        'bipolar disorder': {
+            response: 'Bipolar I Disorder involves episodes of mania (elevated mood, high energy) and depression (low mood, loss of interest). The manic episodes are more severe than in Bipolar II and can include psychosis. This is a serious condition that requires professional diagnosis and treatment.',
+            keywords: ['bipolar disorder', 'bipolar i']
+        },
+        'symptoms': {
+            response: 'Symptoms vary by episode type:\n\n**Manic episodes:** Elevated mood, increased energy, racing thoughts, decreased need for sleep, grandiosity, impulsivity, and sometimes psychosis.\n\n**Depressive episodes:** Persistent sadness, loss of interest, fatigue, difficulty concentrating, feelings of worthlessness, and thoughts of death or suicide.\n\n**Mixed episodes:** Symptoms of both mania and depression occurring simultaneously, which can be particularly challenging.',
+            keywords: ['symptoms', 'signs', 'what are', 'how do i know']
+        },
+        'manic': {
+            response: 'Manic episodes are characterized by an abnormally elevated, expansive, or irritable mood lasting at least one week. Key features include:\n\n• Increased energy and activity\n• Decreased need for sleep\n• Racing thoughts and rapid speech\n• Grandiose ideas or beliefs\n• Impulsive or risky behavior\n• Poor judgment\n\nThese episodes can significantly impact relationships, work, and daily functioning.',
+            keywords: ['manic', 'mania', 'manic episode']
+        },
+        'depressive': {
+            response: 'Depressive episodes involve persistent feelings of sadness, emptiness, or hopelessness lasting at least two weeks. Common symptoms include:\n\n• Loss of interest in activities\n• Fatigue or loss of energy\n• Difficulty concentrating\n• Changes in sleep or appetite\n• Feelings of worthlessness or guilt\n• Thoughts of death or suicide\n\nThese episodes can be severe and may require immediate professional help.',
+            keywords: ['depressive', 'depression', 'depressed', 'sad']
+        },
+        'mixed': {
+            response: 'Mixed episodes involve experiencing symptoms of both mania and depression simultaneously or in rapid alternation. This can include:\n\n• High energy with profound sadness\n• Racing thoughts with feelings of emptiness\n• Agitation with hopelessness\n• Restlessness with fatigue\n\nMixed episodes can be particularly dangerous as the combination of high energy and negative emotions may increase the risk of harmful behaviors.',
+            keywords: ['mixed', 'mixed episode', 'both']
+        },
+        'treatment': {
+            response: 'Bipolar I Disorder is typically treated with a combination of:\n\n• **Medication:** Mood stabilizers, antipsychotics, and sometimes antidepressants\n• **Psychotherapy:** Cognitive behavioral therapy, family-focused therapy, or interpersonal therapy\n• **Lifestyle changes:** Regular sleep schedule, stress management, exercise\n• **Support:** Support groups and family education\n\nTreatment should be managed by qualified mental health professionals.',
+            keywords: ['treatment', 'therapy', 'medication', 'help', 'cure']
+        },
+        'artwork': {
+            response: 'This interactive artwork, "Dual Spectrum," represents the emotional and perceptual shifts experienced in Bipolar I Disorder through:\n\n• **Visual states:** Color gradients and animations that change with each mood state\n• **Progressive transitions:** Images that transition through 7 levels (-3 to +3) showing gradual mood changes\n• **Thought display:** Rotating thoughts that reflect the internal experience of each state\n• **Statistics tracking:** Time spent in each state, reflecting the cyclical nature of the condition\n\nIt\'s designed as an educational tool to help others understand the experience of bipolar disorder.',
+            keywords: ['artwork', 'art', 'this website', 'what is this', 'experience']
+        },
+        'help': {
+            response: 'If you or someone you know is experiencing a mental health crisis:\n\n**Immediate Help:**\n• National Suicide Prevention Lifeline: **988**\n• Crisis Text Line: Text **HOME** to **741741**\n• SAMHSA National Helpline: **1-800-662-4357**\n\n**For Support:**\n• Contact a mental health professional or psychiatrist\n• Reach out to trusted friends or family\n• Visit your local emergency room if in immediate danger\n\n**Remember:** You are not alone, and help is available. This chatbot is not a substitute for professional medical care.',
+            keywords: ['help', 'crisis', 'suicide', 'emergency', 'need help', 'i need']
+        },
+        'resources': {
+            response: 'Here are helpful resources for bipolar disorder:\n\n**Organizations:**\n• NAMI (National Alliance on Mental Illness)\n• Depression and Bipolar Support Alliance (DBSA)\n• International Bipolar Foundation\n\n**Crisis Resources:**\n• National Suicide Prevention Lifeline: 988\n• Crisis Text Line: Text HOME to 741741\n• SAMHSA National Helpline: 1-800-662-4357\n\n**Educational:**\n• NIMH (National Institute of Mental Health)\n• Mental Health America\n\nAlways consult qualified healthcare professionals for diagnosis and treatment.',
+            keywords: ['resources', 'organizations', 'where to', 'support groups']
+        },
+        'diagnosis': {
+            response: 'Bipolar I Disorder can only be diagnosed by a qualified mental health professional, such as a psychiatrist or clinical psychologist. Diagnosis typically involves:\n\n• Comprehensive psychiatric evaluation\n• Medical history review\n• Discussion of symptoms and their impact\n• Sometimes family history assessment\n\nThis artwork is an educational tool and cannot provide diagnosis. If you\'re concerned about symptoms, please consult a healthcare professional.',
+            keywords: ['diagnosis', 'diagnose', 'do i have', 'test', 'screening']
+        }
+    },
+
+    getResponse(userMessage) {
+        const message = userMessage.toLowerCase().trim();
+        const currentState = AppState.current;
+
+        // Check for crisis keywords first
+        if (this.isCrisis(message)) {
+            return {
+                response: '**If you are in immediate danger, please call 988 or go to your nearest emergency room.**\n\nI\'m here to listen, but I cannot provide emergency services. Please reach out to:\n\n• National Suicide Prevention Lifeline: **988**\n• Crisis Text Line: Text **HOME** to **741741**\n• Your local emergency services: **911**\n\nYou are not alone, and professional help is available 24/7.',
+                urgent: true
+            };
+        }
+
+        // Check knowledge base
+        for (const [key, data] of Object.entries(this.knowledgeBase)) {
+            if (data.keywords.some(keyword => message.includes(keyword))) {
+                let response = data.response;
+                
+                // Add contextual information based on current state
+                if (currentState === 'manic') {
+                    response += '\n\n*You are currently viewing the Manic state in this artwork.*';
+                } else if (currentState === 'depressive') {
+                    response += '\n\n*You are currently viewing the Depressive state in this artwork.*';
+                } else if (currentState === 'mixed') {
+                    response += '\n\n*You are currently viewing the Mixed state in this artwork.*';
+                }
+                
+                return { response, urgent: false };
+            }
+        }
+
+        // Default response
+        return {
+            response: 'I understand you\'re asking about "' + userMessage + '". I can help with questions about:\n\n• Bipolar disorder and its symptoms\n• The artwork and how it works\n• Mental health resources and crisis support\n• Treatment and support options\n\nTry asking something like "What is bipolar disorder?" or "What are the symptoms?"',
+            urgent: false
+        };
+    },
+
+    isCrisis(message) {
+        const crisisKeywords = ['suicide', 'kill myself', 'end my life', 'want to die', 'hurt myself', 'self harm', 'emergency', 'crisis'];
+        return crisisKeywords.some(keyword => message.includes(keyword));
+    },
+
+    formatResponse(text) {
+        // Convert markdown-style formatting to HTML
+        let formatted = text
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\n\n/g, '<br><br>')
+            .replace(/\n/g, '<br>')
+            .replace(/\*(.*?)\*/g, '<em>$1</em>');
+        
+        // Wrap in paragraph tags
+        return formatted;
+    }
+};
+
+// Chatbot DOM elements
+const chatbotElements = {
+    container: document.getElementById('chatbot-container'),
+    toggle: document.getElementById('chatbot-toggle'),
+    close: document.getElementById('chatbot-close'),
+    messages: document.getElementById('chatbot-messages'),
+    input: document.getElementById('chatbot-input'),
+    send: document.getElementById('chatbot-send'),
+    quickActions: document.querySelectorAll('.quick-action-btn')
+};
+
+// Initialize chatbot
+function initChatbot() {
+    if (!chatbotElements.container) return;
+
+    // Toggle chatbot
+    chatbotElements.toggle?.addEventListener('click', () => {
+        chatbotElements.container.classList.toggle('open');
+        if (chatbotElements.container.classList.contains('open')) {
+            chatbotElements.input.focus();
+        }
+    });
+
+    // Close chatbot
+    chatbotElements.close?.addEventListener('click', () => {
+        chatbotElements.container.classList.remove('open');
+    });
+
+    // Send message
+    function sendMessage() {
+        const message = chatbotElements.input.value.trim();
+        if (!message) return;
+
+        // Add user message
+        addMessage(message, 'user');
+        chatbotElements.input.value = '';
+
+        // Get and add bot response
+        setTimeout(() => {
+            const botResponse = Chatbot.getResponse(message);
+            addMessage(botResponse.response, 'bot', botResponse.urgent);
+        }, 500);
+    }
+
+    chatbotElements.send?.addEventListener('click', sendMessage);
+    chatbotElements.input?.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            sendMessage();
+        }
+    });
+
+    // Quick action buttons
+    chatbotElements.quickActions.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const question = btn.getAttribute('data-question');
+            chatbotElements.input.value = question;
+            sendMessage();
+        });
+    });
+
+    // Add message to chat
+    function addMessage(text, type, urgent = false) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `chatbot-message ${type}-message`;
+        
+        const contentDiv = document.createElement('div');
+        contentDiv.className = 'message-content';
+        
+        if (urgent) {
+            contentDiv.style.background = 'rgba(255, 87, 87, 0.2)';
+            contentDiv.style.borderColor = 'rgba(255, 87, 87, 0.4)';
+        }
+        
+        const p = document.createElement('p');
+        p.innerHTML = Chatbot.formatResponse(text);
+        contentDiv.appendChild(p);
+        messageDiv.appendChild(contentDiv);
+        
+        chatbotElements.messages.appendChild(messageDiv);
+        chatbotElements.messages.scrollTop = chatbotElements.messages.scrollHeight;
+    }
+}
+
+// Initialize chatbot when DOM is ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initChatbot);
+} else {
+    initChatbot();
+}
+
+// ========================================
 // CLEANUP ON UNLOAD
 // ========================================
 window.addEventListener('beforeunload', () => {
